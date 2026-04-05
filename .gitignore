@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+/out
+samples/benchmark
+include/containers/skip_list.hpp
+
 # User-specific files
 *.rsuser
 *.suo
