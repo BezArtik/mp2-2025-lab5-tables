@@ -7,19 +7,18 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Configure
+    - name: Build Tables
       shell: bash
-        mkdir -p ci-build
-        cmake -B ci-build \
-          -G "Visual Studio 18 2026" \
-          -A x64 \
-          -DCMAKE_CXX_STANDARD=20 \
-          -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-          -DBUILD_TESTS=ON \
-          -DBUILD_SAMPLES=ON
-    
+      run: |
+        export CMAKE_BUILD_PARALLEL_LEVEL=4
+        mkdir build
+        cmake \
+            -A x64 \
+            -B ${PWD}/build \
+            -DBUILD_TESTS=ON \
+            -DBUILD_SAMPLES=OFF
+        cmake --build ${PWD}/build --config Debug
     - name: Run tests
       shell: bash
       run: |
-        find ci-build -name "*test*.exe" -type f -exec {} --gtest_repeat=2 --gtest_break_on_failure \;
+        ${PWD}/build/tests/Debug/tests.exe --gtest_repeat=2 --gtest_break_on_failure
