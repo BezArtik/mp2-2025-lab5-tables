@@ -9,7 +9,7 @@ namespace gen {
 
 class StringGenerator {
 public:
-    StringGenerator(size_t min_len = 3, size_t max_len = 500)
+    StringGenerator(size_t min_len = 50, size_t max_len = 500)
         : gen_(std::random_device{}())
         , len_dis_(min_len, max_len)
         , char_dis_(0, sizeof(chars_) - 2) {
@@ -35,7 +35,7 @@ private:
 class MonomialGenerator {
 public:
 
-    MonomialGenerator(double coeff_min = -10.0, double coeff_max = 10.0)
+    MonomialGenerator(double coeff_min = -100.0, double coeff_max = 100.0)
         : gen_(std::random_device{}())
         , coeff_dis_(coeff_min, coeff_max) {
     }
@@ -59,9 +59,9 @@ private:
 class PolynomialGenerator {
 public:
 
-    PolynomialGenerator(size_t max_monomials = 100ull)
+    PolynomialGenerator(size_t max_monomials = 500)
         : gen_(std::random_device{}())
-        , monom_count_dis_(1ull, max_monomials)
+        , monom_count_dis_(1, max_monomials)
         , monom_gen_(-100.0, 100.0) {
     }
 
