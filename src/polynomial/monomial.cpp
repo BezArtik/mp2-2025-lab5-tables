@@ -159,6 +159,10 @@ bool polynomial::Monomial::is_similar(const Monomial& other) const noexcept {
                });
 }
 
+bool polynomial::Monomial::is_zero() const noexcept { 
+    return std::abs(coefficient_) < std::numeric_limits<double>::epsilon(); 
+}
+
 polynomial::Monomial& polynomial::Monomial::operator*=(double scalar) noexcept {
     if (std::abs(scalar) < std::numeric_limits<double>::epsilon()) {
         variables_.clear();

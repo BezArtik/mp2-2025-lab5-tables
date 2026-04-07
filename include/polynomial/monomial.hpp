@@ -60,7 +60,7 @@ public:
     size_t variables_count() const noexcept { return variables_.size(); }
     bool is_similar(const Monomial& other) const noexcept;
     bool has_variables() const noexcept { return !variables_.empty(); }
-    bool is_zero() const noexcept { return std::abs(coefficient_) < std::numeric_limits<double>::epsilon(); }
+    bool is_zero() const noexcept;
 
 private:
     double coefficient_;

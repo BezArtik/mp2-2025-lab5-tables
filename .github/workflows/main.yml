@@ -19,4 +19,4 @@ jobs:
     - name: Run tests
       shell: bash
       run: |
-        ${PWD}/build/test/Release/tables_test.exe --gtest_repeat=2 --gtest_break_on_failure
+        ${PWD}/build/msvc-debug/tests/Debug/tests.exe --gtest_repeat=2 --gtest_break_on_failure
