@@ -2,13 +2,10 @@
 #include "containers/sorted_list.hpp"
 #include <algorithm>
 
-using tests::TypedContainerTest;
-using tests::FunctionalTypes;
-
 template<typename T>
-class SortedListTest : public TypedContainerTest<T> {};
+class SortedListTest : public tests::TypedContainerTest<T> {};
 
-TYPED_TEST_SUITE(SortedListTest, FunctionalTypes);
+TYPED_TEST_SUITE(SortedListTest, tests::FunctionalTypes);
 
 TYPED_TEST(SortedListTest, can_create_empty) {
     containers::SortedList<TypeParam> list;

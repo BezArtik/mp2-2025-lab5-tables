@@ -1,0 +1,58 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "msvc-base",
+      "hidden": true,
+      "generator": "Visual Studio 18 2026",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_CXX_EXTENSIONS": "OFF",
+        "BUILD_SAMPLES": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "msvc-debug",
+      "displayName": "MSVC Debug",
+      "description": "MSVC build with debug symbols",
+      "inherits": "msvc-base",
+      "cacheVariables": {
+        "BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "msvc-release",
+      "displayName": "MSVC Release",
+      "description": "MSVC build with full optimizations (/O2)",
+      "inherits": "msvc-base",
+      "cacheVariables": {
+        "BUILD_TESTS": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "msvc-debug",
+      "configurePreset": "msvc-debug",
+      "configuration": "Debug",
+      "displayName": "Build MSVC Debug"
+    },
+    {
+      "name": "msvc-release",
+      "configurePreset": "msvc-release",
+      "configuration": "Release",
+      "displayName": "Build MSVC Release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "msvc-debug",
+      "configurePreset": "msvc-debug",
+      "configuration": "Debug",
+      "displayName": "Test MSVC Debug"
+    }
+  ]
+}

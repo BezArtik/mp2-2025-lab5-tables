@@ -4,9 +4,6 @@ project(tables VERSION 1.0.0 LANGUAGES CXX)
 option(BUILD_SAMPLES "Build sample applications" ON)
 option(BUILD_TESTS "Build tests" ON)
 
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 add_library(containers INTERFACE)
 target_include_directories(containers INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

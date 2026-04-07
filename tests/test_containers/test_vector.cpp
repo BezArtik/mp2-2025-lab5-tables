@@ -9,13 +9,10 @@
 #include <cstdint>
 #include <iterator>
 
-using tests::TypedContainerTest;
-using tests::FunctionalTypes;
-
 template<typename T>
-class VectorTest : public TypedContainerTest<T> {};
+class VectorTest : public tests::TypedContainerTest<T> {};
 
-TYPED_TEST_SUITE(VectorTest, FunctionalTypes);
+TYPED_TEST_SUITE(VectorTest, tests::FunctionalTypes);
 
 TYPED_TEST(VectorTest, can_create_empty_vector) {
     ASSERT_NO_THROW(containers::Vector<TypeParam> vec);
@@ -100,7 +97,7 @@ TYPED_TEST(VectorTest, can_push_back_move) {
     containers::Vector<TypeParam> vec;
     TypeParam obj = this->create();
 
-    vec.push_back(std::move(obj));
+    ASSERT_NO_THROW(vec.push_back(std::move(obj)));
     ASSERT_EQ(vec.size(), 1);
 }
 

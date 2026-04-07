@@ -6,7 +6,7 @@
 /out
 samples/benchmark
 include/containers/skip_list.hpp
-CMakeSettings.json
+/build_linux
 
 # User-specific files
 *.rsuser

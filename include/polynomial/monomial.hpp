@@ -77,7 +77,7 @@ struct MonomialCompare {
 
 Monomial operator*(double scalar, const Monomial& other) noexcept;
 Monomial operator*(Monomial other, double scalar) noexcept;
-Monomial operator*(Monomial lhs, Monomial rhs) noexcept;
+Monomial operator*(Monomial lhs, Monomial rhs);
 
 bool operator==(const Monomial& lhs, const Monomial& rhs) noexcept;
 bool operator!=(const Monomial& lhs, const Monomial& rhs) noexcept;

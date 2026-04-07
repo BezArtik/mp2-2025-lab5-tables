@@ -23,10 +23,8 @@ public:
     Polynomial& operator+=(Polynomial rhs);
     Polynomial& operator-=(Polynomial rhs);
     Polynomial& operator*=(double scalar) noexcept;
-    Polynomial& operator*=(const Monomial& rhs) noexcept;
-    Polynomial& operator*=(Monomial&& rhs) noexcept;
-
-    Polynomial& operator*=(Polynomial rhs);
+    Polynomial& operator*=(const Monomial& rhs);
+    Polynomial& operator*=(const Polynomial& rhs);
 
     auto begin()        noexcept { return monomials_.begin(); }
     auto end()          noexcept { return monomials_.end(); }

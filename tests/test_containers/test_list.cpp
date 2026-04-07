@@ -8,13 +8,10 @@
 #include <algorithm>
 #include <iterator>
 
-using tests::TypedContainerTest;
-using tests::FunctionalTypes;
-
 template<typename T>
-class ListTest : public TypedContainerTest<T> {};
+class ListTest : public tests::TypedContainerTest<T> {};
 
-TYPED_TEST_SUITE(ListTest, FunctionalTypes);
+TYPED_TEST_SUITE(ListTest, tests::FunctionalTypes);
 
 TYPED_TEST(ListTest, can_create_empty_list) {
     ASSERT_NO_THROW(containers::List<TypeParam> list);

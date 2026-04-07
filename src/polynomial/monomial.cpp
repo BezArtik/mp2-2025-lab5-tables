@@ -50,8 +50,7 @@ void polynomial::Monomial::add_variable(const Variable& var) {
         if (updated.power_ != 0) {
             variables_.insert(updated);
         }
-    }
-    else {
+    } else {
         variables_.insert(var);
     }
 }
@@ -191,7 +190,7 @@ polynomial::Monomial polynomial::operator*(double scalar, const Monomial& other)
     return other * scalar;
 }
 
-polynomial::Monomial polynomial::operator*(Monomial lhs, Monomial rhs) noexcept {
+polynomial::Monomial polynomial::operator*(Monomial lhs, Monomial rhs) {
     return lhs *= std::move(rhs);
 }
 

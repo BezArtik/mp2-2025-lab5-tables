@@ -109,7 +109,7 @@ polynomial::Polynomial& polynomial::Polynomial::operator*=(double scalar) noexce
     return *this;
 }
 
-polynomial::Polynomial& polynomial::Polynomial::operator*=(const Monomial& rhs) noexcept {
+polynomial::Polynomial& polynomial::Polynomial::operator*=(const Monomial& rhs) {
     if (rhs.is_zero()) {
         monomials_.clear();
         return *this;
@@ -120,18 +120,7 @@ polynomial::Polynomial& polynomial::Polynomial::operator*=(const Monomial& rhs) 
     return *this;
 }
 
-polynomial::Polynomial& polynomial::Polynomial::operator*=(Monomial&& rhs) noexcept {
-    if (rhs.is_zero()) {
-        monomials_.clear();
-        return *this;
-    }
-    std::for_each(monomials_.begin(), monomials_.end(), 
-        [&rhs](auto& m) { m *= rhs; });
-    combine_like_terms();
-    return *this;
-}
-
-polynomial::Polynomial& polynomial::Polynomial::operator*=(Polynomial rhs) {
+polynomial::Polynomial& polynomial::Polynomial::operator*=(const Polynomial& rhs) {
     if (rhs.is_zero()) {
         monomials_.clear();
         return *this;
@@ -213,12 +202,9 @@ std::ostream& polynomial::operator<<(std::ostream& ostr, const polynomial::Polyn
     auto it = p.begin();
     ostr << *it;
 
-    std::for_each(std::next(it), p.end(), [&ostr](const auto& monom) {
-        if (monom.coefficient() >= 0.0) {
-            ostr << " + " << monom;
-        } else {
-            ostr << " - " << (-1.0) * monom;
-        }
+    std::for_each(std::next(it), p.end(), 
+        [&ostr](const auto& monom) {
+        monom.coefficient() >= 0.0 ? ostr << " + " << monom : ostr << " - " << (-1.0) * monom;
         });
 
     return ostr;

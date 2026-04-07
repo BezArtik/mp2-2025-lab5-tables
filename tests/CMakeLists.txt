@@ -25,7 +25,6 @@ target_sources(tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/test_tables/test_sorted_array_table.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_polynomial/test_monomial.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_polynomial/test_polynomial.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_common/test_common.cpp
 )
 
 target_link_libraries(tests

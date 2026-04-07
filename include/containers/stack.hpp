@@ -20,7 +20,7 @@ public:
 	size_type size() const noexcept { return stack_.size(); }
 	void push(const_reference data) { stack_.push_back(data); }
 	void push(T&& data) { stack_.push_back(std::move(data)); }
-	void pop() { stack_.pop_back(); }
+	void pop() noexcept { stack_.pop_back(); }
 	void clear() noexcept { stack_.clear(); }
 private:
 	Vector<T> stack_;
