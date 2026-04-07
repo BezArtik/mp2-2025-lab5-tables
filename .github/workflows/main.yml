@@ -3,20 +3,23 @@ name: Build application
 on: [push, pull_request]
 
 jobs:
- windows-msvc-build:
+  windows-msvc-build:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Build Tables
+    - uses: actions/checkout@v4
+    
+    - name: Configure
       shell: bash
-      run: |
-        export CMAKE_BUILD_PARALLEL_LEVEL=4
-        mkdir build
-        cmake \
-            -A x64 \
-            -B ${PWD}/build
-        cmake --build ${PWD}/build --config Release
+        mkdir -p ci-build
+        cmake -B ci-build \
+          -G "Visual Studio 18 2026" \
+          -A x64 \
+          -DCMAKE_CXX_STANDARD=20 \
+          -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+          -DBUILD_TESTS=ON \
+          -DBUILD_SAMPLES=ON
+    
     - name: Run tests
       shell: bash
       run: |
-        ${PWD}/build/msvc-debug/tests/Debug/tests.exe --gtest_repeat=2 --gtest_break_on_failure
+        find ci-build -name "*test*.exe" -type f -exec {} --gtest_repeat=2 --gtest_break_on_failure \;
