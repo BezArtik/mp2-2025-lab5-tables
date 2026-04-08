@@ -1,4 +1,4 @@
-#include "test_common/test_common.hpp"
+#include "test_common_containers/test_common_containers.hpp"
 #include "containers/vector.hpp"
 #include <gtest/gtest.h>
 #include <string>
@@ -29,7 +29,7 @@ TYPED_TEST(VectorTest, can_create_vector_with_size) {
 }
 
 TYPED_TEST(VectorTest, can_create_vector_with_size_and_value) {
-    TypeParam obj = this->create();
+    auto obj = this->create();
     containers::Vector<TypeParam> vec(5, obj);
     ASSERT_EQ(vec.size(), 5);
     ASSERT_TRUE(std::all_of(vec.begin(), vec.end(), 
@@ -47,7 +47,7 @@ TYPED_TEST(VectorTest, can_create_vector_from_initializer_list) {
 
 TYPED_TEST(VectorTest, can_copy_vector) {
     containers::Vector<TypeParam> vec1;
-    TypeParam obj = this->create();
+    auto obj = this->create();
     vec1.push_back(obj);
 
     containers::Vector<TypeParam> vec2(vec1);
@@ -58,7 +58,7 @@ TYPED_TEST(VectorTest, can_copy_vector) {
 
 TYPED_TEST(VectorTest, can_move_vector) {
     containers::Vector<TypeParam> vec1;
-    TypeParam obj = this->create();
+    auto obj = this->create();
     vec1.push_back(obj);
     auto* old_data = vec1.data();
 
@@ -81,13 +81,13 @@ TEST(VectorExceptionTest, out_of_range_on_at) {
 
 TYPED_TEST(VectorTest, can_push_back_elements) {
     containers::Vector<TypeParam> vec;
-    TypeParam obj = this->create();
+    auto obj = this->create();
 
     ASSERT_NO_THROW(vec.push_back(obj));
     ASSERT_EQ(vec.size(), 1);
     ASSERT_EQ(vec[0], obj);
 
-    TypeParam obj2 = this->create();
+    auto obj2 = this->create();
     vec.push_back(obj2);
     ASSERT_EQ(vec.size(), 2);
     ASSERT_EQ(vec[1], obj2);
@@ -95,7 +95,7 @@ TYPED_TEST(VectorTest, can_push_back_elements) {
 
 TYPED_TEST(VectorTest, can_push_back_move) {
     containers::Vector<TypeParam> vec;
-    TypeParam obj = this->create();
+    auto obj = this->create();
 
     ASSERT_NO_THROW(vec.push_back(std::move(obj)));
     ASSERT_EQ(vec.size(), 1);
@@ -103,7 +103,7 @@ TYPED_TEST(VectorTest, can_push_back_move) {
 
 TYPED_TEST(VectorTest, can_emplace_back_elements) {
     containers::Vector<TypeParam> vec;
-    TypeParam obj = this->create();
+    auto obj = this->create();
 
     ASSERT_NO_THROW(vec.emplace_back(obj));
     ASSERT_EQ(vec.size(), 1);
@@ -112,8 +112,8 @@ TYPED_TEST(VectorTest, can_emplace_back_elements) {
 
 TYPED_TEST(VectorTest, can_insert_at_beginning) {
     containers::Vector<TypeParam> vec;
-    TypeParam obj1 = this->create();
-    TypeParam obj2 = this->create();
+    auto obj1 = this->create();
+    auto obj2 = this->create();
 
     vec.push_back(obj1);
     auto it = vec.insert(vec.begin(), obj2);
@@ -139,7 +139,7 @@ TYPED_TEST(VectorTest, can_insert_in_middle) {
 
 TYPED_TEST(VectorTest, can_erase_elements) {
     containers::Vector<TypeParam> vec;
-    TypeParam obj = this->create();
+    auto obj = this->create();
     vec.push_back(obj);
 
     auto it = vec.erase(vec.begin());
@@ -164,7 +164,7 @@ TYPED_TEST(VectorTest, can_erase_in_middle) {
 
 TYPED_TEST(VectorTest, can_pop_back) {
     containers::Vector<TypeParam> vec;
-    TypeParam obj = this->create();
+    auto obj = this->create();
     vec.push_back(obj);
 
     ASSERT_NO_THROW(vec.pop_back());
@@ -195,7 +195,7 @@ TYPED_TEST(VectorTest, can_shrink_to_fit) {
     vec.push_back(this->create());
     vec.reserve(100);
 
-    size_t old_cap = vec.capacity();
+    auto old_cap = vec.capacity();
     ASSERT_GE(old_cap, 100);
 
     vec.shrink_to_fit();
@@ -206,7 +206,7 @@ TYPED_TEST(VectorTest, can_shrink_to_fit) {
 
 TYPED_TEST(VectorTest, resize_increases_size) {
     containers::Vector<TypeParam> vec;
-    TypeParam obj = this->create();
+    auto obj = this->create();
 
     vec.resize(5, obj);
     ASSERT_EQ(vec.size(), 5);
@@ -239,12 +239,12 @@ TYPED_TEST(VectorTest, can_get_data_pointer) {
     containers::Vector<TypeParam> vec;
     vec.push_back(this->create());
 
-    TypeParam* data = vec.data();
+    auto* data = vec.data();
     ASSERT_NE(data, nullptr);
     ASSERT_EQ(*data, vec[0]);
 
     const auto& const_vec = vec;
-    const TypeParam* const_data = const_vec.data();
+    const auto* const_data = const_vec.data();
     ASSERT_EQ(const_data, data);
 }
 
@@ -301,11 +301,11 @@ TYPED_TEST(VectorTest, iterator_random_access) {
 
 TYPED_TEST(VectorTest, can_swap_vectors) {
     containers::Vector<TypeParam> vec1;
-    TypeParam obj1 = this->create();
+    auto obj1 = this->create();
     vec1.push_back(obj1);
 
     containers::Vector<TypeParam> vec2;
-    TypeParam obj2 = this->create();
+    auto obj2 = this->create();
     vec2.push_back(obj2);
 
     auto* data1 = vec1.data();
@@ -322,34 +322,38 @@ TYPED_TEST(VectorTest, can_swap_vectors) {
     ASSERT_EQ(vec2.data(), data1);
 }
 
-TEST(VectorMoveOnlyTest, can_store_unique_ptr) {
-    containers::Vector<std::unique_ptr<int32_t>> vec;
-    vec.push_back(std::make_unique<int32_t>(42));
-    vec.push_back(std::make_unique<int32_t>(43));
+TYPED_TEST(VectorTest, can_store_unique_ptr) {
+    containers::Vector<std::unique_ptr<TypeParam>> vec;
+    auto obj1 = this->create();
+    auto obj2 = this->create();
+    vec.push_back(std::make_unique<TypeParam>(obj1));
+    vec.push_back(std::make_unique<TypeParam>(obj2));
 
-    ASSERT_EQ(*vec[0], 42);
-    ASSERT_EQ(*vec[1], 43);
+    ASSERT_EQ(*vec[0], obj1);
+    ASSERT_EQ(*vec[1], obj2);
 
-    containers::Vector<std::unique_ptr<int32_t>> vec2(std::move(vec));
+    containers::Vector<std::unique_ptr<TypeParam>> vec2(std::move(vec));
     ASSERT_EQ(vec2.size(), 2);
-    ASSERT_EQ(*vec2[0], 42);
+    ASSERT_EQ(*vec2[0], obj1);
     ASSERT_EQ(vec.size(), 0);
 }
 
-TEST(VectorMoveOnlyTest, can_insert_move_only) {
-    containers::Vector<std::unique_ptr<int32_t>> vec;
-    auto ptr = std::make_unique<int32_t>(42);
+TYPED_TEST(VectorTest, can_insert_move_only) {
+    containers::Vector<std::unique_ptr<TypeParam>> vec;
+    auto obj = this->create();
+    auto ptr = std::make_unique<TypeParam>(obj);
 
     vec.insert(vec.begin(), std::move(ptr));
     ASSERT_EQ(vec.size(), 1);
-    ASSERT_EQ(*vec[0], 42);
+    ASSERT_EQ(*vec[0], obj);
     ASSERT_EQ(ptr, nullptr);
 }
 
-TEST(VectorMoveOnlyTest, can_emplace_back_move_only) {
-    containers::Vector<std::unique_ptr<int32_t>> vec;
-    vec.emplace_back(std::make_unique<int32_t>(42));
+TYPED_TEST(VectorTest, can_emplace_back_move_only) {
+    containers::Vector<std::unique_ptr<TypeParam>> vec;
+    auto obj = this->create();
+    vec.emplace_back(std::make_unique<TypeParam>(obj));
     ASSERT_EQ(vec.size(), 1);
-    ASSERT_EQ(*vec[0], 42);
+    ASSERT_EQ(*vec[0], obj);
 }
 

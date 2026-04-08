@@ -1,7 +1,7 @@
 #pragma once
 #include "containers/vector.hpp"
-#include "polynomial/monomial.hpp"
-#include "polynomial/polynomial.hpp"
+#include "polynomial/core/monomial.hpp"
+#include "polynomial/core/polynomial.hpp"
 #include "generators/generators.hpp"
 #include <gtest/gtest.h>
 #include <gtest/internal/gtest-type-util.h>

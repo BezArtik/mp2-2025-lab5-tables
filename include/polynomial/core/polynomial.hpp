@@ -1,6 +1,6 @@
 #pragma once
 #include "containers/sorted_list.hpp"
-#include "polynomial/monomial.hpp"
+#include "polynomial/core/monomial.hpp"
 
 namespace polynomial {
 

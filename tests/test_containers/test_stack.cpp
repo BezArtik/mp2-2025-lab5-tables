@@ -1,4 +1,4 @@
-#include "test_common/test_common.hpp"
+#include "test_common_containers/test_common_containers.hpp"
 #include "containers/stack.hpp"
 #include <gtest/gtest.h>
 #include <utility>
@@ -17,7 +17,7 @@ TYPED_TEST(StackTest, can_create_empty_stack) {
 
 TYPED_TEST(StackTest, can_copy_stack) {
     containers::Stack<TypeParam> stack1;
-    TypeParam obj = this->create();
+    auto obj = this->create();
     stack1.push(obj);
 
     containers::Stack<TypeParam> stack2(stack1);
@@ -28,7 +28,7 @@ TYPED_TEST(StackTest, can_copy_stack) {
 
 TYPED_TEST(StackTest, can_move_stack) {
     containers::Stack<TypeParam> stack1;
-    TypeParam obj = this->create();
+    auto obj = this->create();
     stack1.push(obj);
 
     containers::Stack<TypeParam> stack2(std::move(stack1));
@@ -39,7 +39,7 @@ TYPED_TEST(StackTest, can_move_stack) {
 
 TYPED_TEST(StackTest, can_push_elenents) {
     containers::Stack<TypeParam> stack;
-    TypeParam obj = this->create();
+    auto obj = this->create();
 
     ASSERT_NO_THROW(stack.push(obj));
     ASSERT_EQ(stack.size(), 1);
@@ -48,7 +48,7 @@ TYPED_TEST(StackTest, can_push_elenents) {
 
 TYPED_TEST(StackTest, can_push_move) {
     containers::Stack<TypeParam> stack;
-    TypeParam obj = this->create();
+    auto obj = this->create();
 
     ASSERT_NO_THROW(stack.push(std::move(obj)));
     ASSERT_EQ(stack.size(), 1);
@@ -56,7 +56,7 @@ TYPED_TEST(StackTest, can_push_move) {
 
 TYPED_TEST(StackTest, can_pop_elements) {
     containers::Stack<TypeParam> stack;
-    TypeParam obj = this->create();
+    auto obj = this->create();
     stack.push(obj);
     ASSERT_NO_THROW(stack.pop());
     EXPECT_TRUE(stack.empty());

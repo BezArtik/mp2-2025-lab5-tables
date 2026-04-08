@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "polynomial/monomial.hpp"
-#include "polynomial/polynomial.hpp"
+#include "polynomial/core/monomial.hpp"
+#include "polynomial/core/polynomial.hpp"
 
 TEST(Polynomial, empty_poly_has_zero_deg) {
 	polynomial::Polynomial p;

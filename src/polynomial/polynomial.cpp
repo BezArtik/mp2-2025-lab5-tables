@@ -1,5 +1,5 @@
-#include "polynomial/polynomial.hpp"
-#include "polynomial/monomial.hpp"
+#include "polynomial/core/polynomial.hpp"
+#include "polynomial/core/monomial.hpp"
 #include "containers/sorted_list.hpp"
 #include "containers/vector.hpp"
 #include <limits>

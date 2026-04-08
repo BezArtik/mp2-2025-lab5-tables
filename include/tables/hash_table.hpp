@@ -80,11 +80,13 @@ public:
 
         HashTable* table_;
         size_type index_;
+        friend class HashTable;
     };
 
     class ConstIterator {
     public:
         using iterator_category = std::forward_iterator_tag;
+        using value_type = const HashTable::value_type;
         using difference_type = ptrdiff_t;
         using pointer = const value_type*;
         using reference = const value_type&;
@@ -133,6 +135,7 @@ public:
         }
         const HashTable* table_;
         size_type index_;
+        friend class HashTable;
     };
 
     using iterator = Iterator;
@@ -154,6 +157,37 @@ public:
             return iterator(this, *pos);
         }
         return end();
+    }
+
+    iterator erase(iterator pos) {
+        if (pos == end() || pos.table_ != this) {
+            return end();
+        }
+
+        size_type current_index = pos.index_;
+
+        if (buckets_[current_index].is_occupied()) {
+            buckets_[current_index].set_deleted();
+            --size_;
+        }
+        ++pos; 
+        return pos;
+    }
+
+    iterator erase(const_iterator pos) {
+        if (pos == end() || pos.table_ != this) {
+            return end();
+        }
+
+        size_type current_index = pos.index_;
+
+        if (buckets_[current_index].is_occupied()) {
+            buckets_[current_index].set_deleted();
+            --size_;
+        }
+        iterator next_it(this, current_index);
+        ++next_it;
+        return next_it;
     }
 
     iterator find(const key_type& key) {
@@ -271,7 +305,6 @@ private:
         if (buckets_.empty()) return std::nullopt;
         size_type attempt = 0;
         size_type pos = hash(key, attempt);
-        size_type start = pos;
 
         while (attempt < buckets_.size()) {
             ++count_;

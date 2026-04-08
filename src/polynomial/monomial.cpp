@@ -1,4 +1,4 @@
-#include "polynomial/monomial.hpp"
+#include "polynomial/core/monomial.hpp"
 #include <limits>
 #include <string>
 #include <iostream>

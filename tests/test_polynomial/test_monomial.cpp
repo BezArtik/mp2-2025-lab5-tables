@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "polynomial/monomial.hpp"
+#include "polynomial/core/monomial.hpp"
 
 
 

@@ -3,7 +3,7 @@
 #include "tables/sorted_array.hpp"
 #include "tables/unsorted_array.hpp"
 #include "tables/hash_table.hpp"
-#include "polynomial/polynomial.hpp"
+#include "polynomial/core/polynomial.hpp"
 #include <iostream>
 #include <string>
 #include <exception>
@@ -32,7 +32,7 @@ struct MurMurHash {
             h ^= k;
             h *= m;
         }
-        const unsigned char* data2 = reinterpret_cast<const unsigned char*>(data);
+        const uint8_t* data2 = reinterpret_cast<const uint8_t*>(data);
         switch (key.size() & 7) {
         case 7: h ^= static_cast<uint64_t>(data2[6]) << 48; break;
         case 6: h ^= static_cast<uint64_t>(data2[5]) << 40; break;
@@ -54,7 +54,7 @@ class ITable {
 public:
     using key_type = Key;
     using mapped_type = Value;
-    using value_type = std::pair<Key, Value>;
+    using value_type = std::pair<key_type, mapped_type>;
     using size_type = size_t;
     using difference_type = ptrdiff_t;
     using reference = value_type&;
@@ -308,7 +308,7 @@ private:
             return res;
         } else {
             tables::HashTable<uint8_t, double> var_values;
-            for (uint8_t var : vars) {
+            for (auto var : vars) {
                 std::cout << "Enter value for variable '" << var << "': ";
                 std::string val;
                 std::getline(std::cin, val);
@@ -361,8 +361,7 @@ private:
                     auto poly_opt = table->find(key);
                     std::cout << "Operations: " << table->op_count() << std::endl;
                     if (poly_opt) {
-                        double result = counting_at_point(*poly_opt);
-                        std::cout << "Value at the point: " << result << std::endl;
+                        std::cout << "Value at the point: " << counting_at_point(*poly_opt) << std::endl;
                     } else {
                         std::cout << "Polynomial not found for key: " << key << std::endl;
                     }
@@ -407,14 +406,11 @@ private:
                 } else {
                     std::cout << "Invalid choice. Try again." << std::endl;
                 }
-
-
             }
         }
-
     }
-
 };
+
 }
 
 int main() {

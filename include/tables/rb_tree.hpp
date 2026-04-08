@@ -14,7 +14,7 @@ class RBTreeTable {
 public:
     using key_type = Key;
     using mapped_type = T;
-    using value_type = std::pair<Key, T>;
+    using value_type = std::pair<key_type, mapped_type>;
     using size_type = size_t;
     using difference_type = ptrdiff_t;
     using reference = value_type&;

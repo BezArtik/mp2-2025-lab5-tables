@@ -1,4 +1,4 @@
-#include "test_common/test_common.hpp"
+#include "test_common_containers/test_common_containers.hpp"
 #include "containers/list.hpp"
 #include <gtest/gtest.h>
 #include <string>
@@ -29,7 +29,7 @@ TYPED_TEST(ListTest, can_create_list_from_initializer_list) {
 
 TYPED_TEST(ListTest, can_copy_list) {
     containers::List<TypeParam> list1;
-    TypeParam obj = this->create();
+    auto obj = this->create();
     list1.push_back(obj);
 
     containers::List<TypeParam> list2(list1);
@@ -40,7 +40,7 @@ TYPED_TEST(ListTest, can_copy_list) {
 
 TYPED_TEST(ListTest, can_move_list) {
     containers::List<TypeParam> list1;
-    TypeParam obj = this->create();
+    auto obj = this->create();
     list1.push_back(obj);
 
     containers::List<TypeParam> list2(std::move(list1));
@@ -51,13 +51,13 @@ TYPED_TEST(ListTest, can_move_list) {
 
 TYPED_TEST(ListTest, can_push_back_elements) {
     containers::List<TypeParam> list;
-    TypeParam obj = this->create();
+    auto obj = this->create();
 
     ASSERT_NO_THROW(list.push_back(obj));
     ASSERT_EQ(list.size(), 1);
     ASSERT_EQ(list.front(), obj);
 
-    TypeParam obj2 = this->create();
+    auto obj2 = this->create();
     list.push_back(obj2);
     ASSERT_EQ(list.size(), 2);
     ASSERT_EQ(list.back(), obj2);
@@ -73,7 +73,7 @@ TYPED_TEST(ListTest, can_push_back_move) {
 
 TYPED_TEST(ListTest, can_emplace_back_elements) {
     containers::List<TypeParam> list;
-    TypeParam obj = this->create();
+    auto obj = this->create();
 
     ASSERT_NO_THROW(list.emplace_back(obj));
     ASSERT_EQ(list.size(), 1);
@@ -82,8 +82,8 @@ TYPED_TEST(ListTest, can_emplace_back_elements) {
 
 TYPED_TEST(ListTest, can_insert_at_beginning) {
     containers::List<TypeParam> list;
-    TypeParam obj1 = this->create();
-    TypeParam obj2 = this->create();
+    auto obj1 = this->create();
+    auto obj2 = this->create();
 
     list.push_back(obj1);
     auto it = list.insert(list.begin(), obj2);
@@ -96,8 +96,7 @@ TYPED_TEST(ListTest, can_insert_at_beginning) {
 
 TYPED_TEST(ListTest, can_erase_elements) {
     containers::List<TypeParam> list;
-    TypeParam obj = this->create();
-    list.push_back(obj);
+    list.push_back(this->create());
 
     auto it = list.erase(list.begin());
     ASSERT_EQ(list.size(), 0);
@@ -106,8 +105,7 @@ TYPED_TEST(ListTest, can_erase_elements) {
 
 TYPED_TEST(ListTest, can_pop_back) {
     containers::List<TypeParam> list;
-    TypeParam obj = this->create();
-    list.push_back(obj);
+    list.push_back(this->create());
 
     ASSERT_NO_THROW(list.pop_back());
     ASSERT_EQ(list.size(), 0);
