@@ -1,6 +1,9 @@
 add_library(polynomial_lib STATIC
-    polynomial/polynomial.cpp
-    polynomial/monomial.cpp
+    polynomial/core/polynomial.cpp
+    polynomial/core/monomial.cpp
+    polynomial/hash/monomial_hash.cpp 
+    polynomial/hash/polynomial_hash.cpp
+    generators/generators.cpp
 )
 
 target_include_directories(polynomial_lib 

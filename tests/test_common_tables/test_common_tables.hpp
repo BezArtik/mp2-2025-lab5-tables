@@ -5,6 +5,10 @@
 #include "generators/generators.hpp"
 #include <gtest/gtest.h>
 #include <stdexcept>
+#include <random>
+#include <type_traits>
+#include <string>
+#include <utility>
 
 namespace tests {
 
@@ -19,11 +23,11 @@ struct Generator {
             return gen::PolynomialGenerator{}();
         } else if constexpr (std::is_same_v<T, int>) {
             static std::mt19937_64 gen(std::random_device{}());
-            static std::uniform_int_distribution<int> dist(1, 1000);
+            static std::uniform_int_distribution<int> dist(-10'000, 10'000);
             return dist(gen);
         } else if constexpr (std::is_same_v<T, double>) {
             static std::mt19937_64 gen(std::random_device{}());
-            static std::uniform_real_distribution<double> dist(0.0, 100.0);
+            static std::uniform_real_distribution<double> dist(-10'000.0, 10'000.0);
             return dist(gen);
         }
         else {

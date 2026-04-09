@@ -5,17 +5,15 @@
 namespace polynomial {
 
 class Polynomial {
+    using monomials_t = containers::SortedList<Monomial, MonomialCompare>;
+    using iterator = monomials_t::iterator;
+    using const_iterator = monomials_t::const_iterator;
 public:
     Polynomial() = default;
     Polynomial(const Monomial& monom);
     template <typename Iter>
-    Polynomial(Iter monoms_begin, Iter monoms_end) 
-        : monomials_(monoms_begin, monoms_end) {
-        combine_like_terms();
-    }
-    Polynomial(std::initializer_list<Monomial> init) 
-        : Polynomial(init.begin(), init.end()) {
-    }
+    Polynomial(Iter monoms_begin, Iter monoms_end);
+    Polynomial(std::initializer_list<Monomial> init);
     Polynomial(const std::string& str);
 
     Polynomial& operator+=(Monomial rhs);
@@ -26,28 +24,31 @@ public:
     Polynomial& operator*=(const Monomial& rhs);
     Polynomial& operator*=(const Polynomial& rhs);
 
-    auto begin()        noexcept { return monomials_.begin(); }
-    auto end()          noexcept { return monomials_.end(); }
-    auto begin()  const noexcept { return monomials_.cbegin(); }
-    auto end()    const noexcept { return monomials_.cend(); }
-    auto cbegin() const noexcept { return monomials_.cbegin(); }
-    auto cend()   const noexcept { return monomials_.cend(); }
+    iterator begin()              noexcept;
+    iterator end()                noexcept;
+    const_iterator begin()  const noexcept;
+    const_iterator end()    const noexcept;
+    const_iterator cbegin() const noexcept;
+    const_iterator cend()   const noexcept;
 
-    bool is_zero() const noexcept { return monomials_.empty(); };
-    size_t term_count() const noexcept { return monomials_.size(); };
-    int32_t deg() const {
-        if (monomials_.empty()) return 0;
-        return monomials_.front().total_deg();
-    }
     containers::SortedList<uint8_t> get_variables() const noexcept;
 
+    bool is_zero() const noexcept;
+    size_t term_count() const noexcept;
+    int32_t deg() const;
+
 private:
-    using monomials_t = containers::SortedList<Monomial, MonomialCompare>;
     monomials_t monomials_;
 
     void combine_like_terms() noexcept;
     void parse_from_string(const std::string& str);
 };
+
+template <typename Iter>
+Polynomial::Polynomial(Iter monoms_begin, Iter monoms_end)
+    : monomials_(monoms_begin, monoms_end) {
+    combine_like_terms();
+}
 
 Polynomial operator+(Polynomial lhs, Polynomial rhs);
 Polynomial operator-(Polynomial lhs, Polynomial rhs);
