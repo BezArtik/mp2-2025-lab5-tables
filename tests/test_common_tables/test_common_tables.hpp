@@ -29,8 +29,7 @@ struct Generator {
             static std::mt19937_64 gen(std::random_device{}());
             static std::uniform_real_distribution<double> dist(-10'000.0, 10'000.0);
             return dist(gen);
-        }
-        else {
+        } else {
             return T{};
         }
     }
@@ -57,19 +56,19 @@ protected:
     Value create_value() const { return Generator<Value>{}(); }
     Pair create_pair() const { return PairGenerator<Key, Value>{}(); }
 
-    containers::Vector<Pair> create_pair_sequence(size_t n) const {
+    auto create_pair_sequence(size_t n) const {
         containers::Vector<Pair> result(n);
         std::generate_n(result.begin(), n, PairGenerator<Key, Value>{});
         return result;
     }
 
     template <typename InputIt>
-    Key create_unique_key(InputIt first, InputIt last) const {
+    auto create_unique_key(InputIt first, InputIt last) const {
         const int max_attempts = 1000;
         for (int attempt = 0; attempt < max_attempts; ++attempt) {
-            Key new_key = create_key();
+            auto new_key = create_key();
             bool exists = std::any_of(first, last,
-                [&new_key](const Pair& p) {
+                [&new_key](const auto& p) {
                     return p.first == new_key;
                 });
             if (!exists) return new_key;
@@ -169,7 +168,7 @@ TYPED_TEST_P(TableTest, erase_nonexistent_key) {
 
     auto non_existent = this->create_unique_key(pairs.begin(), pairs.end());
 
-    size_t size_before = this->table.size();
+    auto size_before = this->table.size();
     auto result = this->table.erase(non_existent);
 
     EXPECT_EQ(result, this->table.end());
@@ -211,7 +210,7 @@ TYPED_TEST_P(TableTest, iterator_traversal) {
     auto pairs = this->create_pair_sequence(8); 
     this->insert_sequence(pairs.begin(), pairs.end());
 
-    size_t count = std::distance(this->table.begin(), this->table.end());
+    auto count = std::distance(this->table.begin(), this->table.end());
     EXPECT_EQ(count, pairs.size());
 
     count = 0;

@@ -16,13 +16,18 @@ public:
     Polynomial(std::initializer_list<Monomial> init);
     Polynomial(const std::string& str);
 
-    Polynomial& operator+=(Monomial rhs);
-    Polynomial& operator-=(Monomial rhs);
-    Polynomial& operator+=(Polynomial rhs);
-    Polynomial& operator-=(Polynomial rhs);
+    Polynomial& operator+=(const Monomial& rhs);
+    Polynomial& operator+=(Monomial&& rhs);
+    Polynomial& operator-=(const Monomial& rhs);
+    Polynomial& operator-=(Monomial&& rhs);
+    Polynomial& operator+=(const Polynomial& rhs);
+    Polynomial& operator-=(const Polynomial& rhs);
+    Polynomial& operator*=(const Polynomial& rhs);
+    Polynomial& operator+=(Polynomial&& rhs);
+    Polynomial& operator-=(Polynomial&& rhs);
+    Polynomial& operator*=(Polynomial&& rhs);
     Polynomial& operator*=(double scalar) noexcept;
     Polynomial& operator*=(const Monomial& rhs);
-    Polynomial& operator*=(const Polynomial& rhs);
 
     iterator begin()              noexcept;
     iterator end()                noexcept;
@@ -50,13 +55,17 @@ Polynomial::Polynomial(Iter monoms_begin, Iter monoms_end)
     combine_like_terms();
 }
 
-Polynomial operator+(Polynomial lhs, Polynomial rhs);
-Polynomial operator-(Polynomial lhs, Polynomial rhs);
+Polynomial operator+(Polynomial lhs, const Polynomial& rhs);
+Polynomial operator+(Polynomial lhs, Polynomial&& rhs);
+Polynomial operator-(Polynomial lhs, const Polynomial& rhs);
+Polynomial operator-(Polynomial lhs, Polynomial&& rhs);
 Polynomial operator*(Polynomial lhs, double scalar) noexcept;
 Polynomial operator*(double scalar, Polynomial rhs) noexcept;
-Polynomial operator*(Polynomial lhs, Monomial rhs);
-Polynomial operator*(Monomial lhs, Polynomial rhs);
-Polynomial operator*(Polynomial lhs, Polynomial rhs);
+Polynomial operator*(Polynomial lhs, const Monomial& rhs);
+Polynomial operator*(Polynomial lhs, Monomial&& rhs);
+Polynomial operator*(Monomial lhs, const Polynomial& rhs);
+Polynomial operator*(Monomial lhs, Polynomial&& rhs);
+Polynomial operator*(Polynomial lhs, const Polynomial& rhs);
 
 bool operator==(const Polynomial& lhs, const Polynomial& rhs) noexcept;
 bool operator!=(const Polynomial& lhs, const Polynomial& rhs) noexcept;

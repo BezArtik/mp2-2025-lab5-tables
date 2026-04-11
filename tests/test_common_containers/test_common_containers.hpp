@@ -26,7 +26,7 @@ protected:
         }
     }
 
-    containers::Vector<T> create_sequence(size_t n) {
+    auto create_sequence(size_t n) {
         containers::Vector<T> result(n);
         if constexpr (std::is_same_v<T, std::string>) {
             std::generate_n(result.begin(), n, gen::StringGenerator{});

@@ -65,7 +65,7 @@ TYPED_TEST(ListTest, can_push_back_elements) {
 
 TYPED_TEST(ListTest, can_push_back_move) {
     containers::List<TypeParam> list;
-    TypeParam obj = this->create();
+    auto obj = this->create();
 
     list.push_back(std::move(obj));
     ASSERT_EQ(list.size(), 1);
@@ -155,11 +155,11 @@ TYPED_TEST(ListTest, const_iterators_work) {
 
 TYPED_TEST(ListTest, can_swap_lists) {
     containers::List<TypeParam> list1;
-    TypeParam obj1 = this->create();
+    auto obj1 = this->create();
     list1.push_back(obj1);
 
     containers::List<TypeParam> list2;
-    TypeParam obj2 = this->create();
+    auto obj2 = this->create();
     list2.push_back(obj2);
 
     std::swap(list1, list2);
@@ -181,7 +181,7 @@ TYPED_TEST(ListTest, sort_works_on_empty_list) {
 
 TYPED_TEST(ListTest, sort_works_on_single_element) {
     containers::List<TypeParam> list;
-    TypeParam obj = this->create();
+    auto obj = this->create();
     list.push_back(obj);
 
     list.sort();

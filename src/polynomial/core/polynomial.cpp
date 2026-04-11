@@ -18,7 +18,7 @@ namespace polynomial {
 void Polynomial::parse_from_string(const std::string& str) {
     std::string s = str;
     std::erase_if(s, [](auto ch) {return std::isspace(ch); });
-    size_t count = std::count_if(s.begin(), s.end(),
+    auto count = std::count_if(s.begin(), s.end(),
         [](uint8_t c) { return c == '+' || c == '-'; });
     containers::Vector<std::string> temp;
     temp.reserve(count + 1);
@@ -48,8 +48,7 @@ void Polynomial::combine_like_terms() noexcept {
         }
         if (it->is_zero()) {
             it = monomials_.erase(it);
-        }
-        else {
+        } else {
             ++it;
         }
     }
@@ -94,40 +93,61 @@ int32_t Polynomial::deg() const {
     return monomials_.front().total_deg();
 }
 
-Polynomial& Polynomial::operator+=(Monomial rhs) {
+Polynomial& Polynomial::operator+=(const Monomial& rhs) {
+    if (rhs.is_zero()) return *this;
+    monomials_.insert(rhs);
+    combine_like_terms();
+    return *this;
+}
+
+Polynomial& Polynomial::operator+=(Monomial&& rhs) {
     if (rhs.is_zero()) return *this;
     monomials_.insert(std::move(rhs));
     combine_like_terms();
     return *this;
 }
 
-Polynomial& Polynomial::operator-=(Monomial rhs) {
-    return *this += (-1.0) * std::move(rhs);
+Polynomial& Polynomial::operator-=(const Monomial& rhs) {
+    return *this += (-1.0) * rhs;
 }
 
-Polynomial& Polynomial::operator+=(Polynomial rhs) {
+Polynomial& Polynomial::operator-=(Monomial&& rhs) {
+    return *this += (-1.0) * rhs;
+}
+
+Polynomial& Polynomial::operator+=(const Polynomial& rhs) {
+    if (rhs.is_zero()) return *this;
+    auto temp = rhs;
+    monomials_.merge(std::move(temp.monomials_));
+    combine_like_terms();
+    return *this;
+}
+
+Polynomial& Polynomial::operator+=(Polynomial&& rhs) {
     if (rhs.is_zero()) return *this;
     monomials_.merge(std::move(rhs.monomials_));
     combine_like_terms();
     return *this;
 }
 
-Polynomial& Polynomial::operator-=(Polynomial rhs) {
+Polynomial& Polynomial::operator-=(const Polynomial& rhs) {
+    return *this += (-1.0) * rhs;
+}
+
+Polynomial& Polynomial::operator-=(Polynomial&& rhs) {
     return *this += (-1.0) * std::move(rhs);
 }
 
 Polynomial& Polynomial::operator*=(double scalar) noexcept {
-    constexpr double eps = std::numeric_limits<double>::epsilon();
-    if (std::abs(scalar) < eps) {
+    if (Monomial::is_zero(scalar)) {
         monomials_.clear();
         return *this;
     }
-    if (std::abs(scalar - 1.0) > eps) {
-        std::for_each(monomials_.begin(), monomials_.end(),
-            [scalar](auto& m) { m *= scalar; });
-        combine_like_terms();
+    if (Monomial::is_zero(scalar - 1.0)) {
+        return *this;
     }
-
+    std::for_each(monomials_.begin(), monomials_.end(),
+        [scalar](auto& m) { m *= scalar; });
     return *this;
 }
 
@@ -159,11 +179,19 @@ Polynomial& Polynomial::operator*=(const Polynomial& rhs) {
     return *this;
 }
 
-Polynomial operator+(Polynomial lhs, Polynomial rhs) {
-    return lhs += std::move(rhs);
+Polynomial operator+(Polynomial lhs, const Polynomial& rhs) {
+    return lhs += rhs; 
 }
 
-Polynomial operator-(Polynomial lhs, Polynomial rhs) {
+Polynomial operator+(Polynomial lhs, Polynomial&& rhs) {
+    return lhs += std::move(rhs); 
+}
+
+Polynomial operator-(Polynomial lhs, const Polynomial& rhs) {
+    return lhs -= rhs;
+}
+
+Polynomial operator-(Polynomial lhs, Polynomial&& rhs) {
     return lhs -= std::move(rhs);
 }
 
@@ -172,19 +200,27 @@ Polynomial operator*(Polynomial lhs, double scalar) noexcept {
 }
 
 Polynomial operator*(double scalar, Polynomial rhs) noexcept {
-    return rhs * scalar;
+    return rhs *= scalar;
 }
 
-Polynomial operator*(Polynomial lhs, Monomial rhs) {
+Polynomial operator*(Polynomial lhs, const Monomial& rhs) {
+    return lhs *= rhs;
+}
+
+Polynomial operator*(Polynomial lhs, Monomial&& rhs) {
     return lhs *= std::move(rhs);
 }
 
-Polynomial operator*(Monomial lhs, Polynomial rhs) {
-    return rhs *= std::move(lhs);
+Polynomial operator*(Monomial lhs, const Polynomial& rhs) {
+    return rhs * std::move(lhs);
 }
 
-Polynomial operator*(Polynomial lhs, Polynomial rhs) {
-    return lhs *= std::move(rhs);
+Polynomial operator*(Monomial lhs, Polynomial&& rhs) {
+    return std::move(rhs) *= std::move(lhs);
+}
+
+Polynomial operator*(Polynomial lhs, const Polynomial& rhs) {
+    return lhs *= rhs;
 }
 
 bool operator==(const Polynomial& lhs, const Polynomial& rhs) noexcept {

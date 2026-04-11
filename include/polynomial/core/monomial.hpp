@@ -23,7 +23,8 @@ public:
     Monomial(const std::string& str);
     
     Monomial& operator*=(double scalar) noexcept;
-    Monomial& operator*=(Monomial other);
+    Monomial& operator*=(const Monomial& rhs);
+    Monomial& operator*=(Monomial&& rhs);
     void add_variable(const Variable& var);
 
     int32_t total_deg() const noexcept;
@@ -34,6 +35,7 @@ public:
     size_t variables_count() const noexcept;
     bool has_variables() const noexcept;
     bool is_zero() const noexcept;
+    static bool is_zero(double scalar) noexcept;
 
     iterator begin()        noexcept;
     iterator end()          noexcept;
@@ -46,6 +48,7 @@ private:
     double coefficient_;
     variables_t variables_;
 
+    static constexpr double eps = std::numeric_limits<double>::epsilon();
     void parse_from_string(const std::string& str);
     void normalize() noexcept;
 };
@@ -64,9 +67,10 @@ Monomial::Monomial(double coeff, Iter begin, Iter end) : coefficient_(coeff) {
     }
 }
 
-Monomial operator*(double scalar, const Monomial& other) noexcept;
-Monomial operator*(Monomial other, double scalar) noexcept;
-Monomial operator*(Monomial lhs, Monomial rhs);
+Monomial operator*(double scalar, const Monomial& rhs) noexcept;
+Monomial operator*(Monomial lhs, double scalar) noexcept;
+Monomial operator*(Monomial lhs, const Monomial& rhs);
+Monomial operator*(Monomial lhs, Monomial&& rhs);
 
 bool operator==(const Monomial& lhs, const Monomial& rhs) noexcept;
 bool operator!=(const Monomial& lhs, const Monomial& rhs) noexcept;
