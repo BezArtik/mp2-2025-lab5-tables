@@ -1,11 +1,13 @@
-#include "test_common_containers/test_common_containers.hpp"
+#include "test_common/test_common_containers.hpp"
 #include "containers/sorted_list.hpp"
 #include <algorithm>
 
-template<typename T>
-class SortedListTest : public tests::TypedContainerTest<T> {};
+namespace tests {
 
-TYPED_TEST_SUITE(SortedListTest, tests::FunctionalTypes);
+template<typename T>
+class SortedListTest : public ContainerTest<T> {};
+
+TYPED_TEST_SUITE(SortedListTest, FunctionalTypes);
 
 TYPED_TEST(SortedListTest, can_create_empty) {
     containers::SortedList<TypeParam> list;
@@ -59,7 +61,7 @@ TYPED_TEST(SortedListTest, insert_unique_with_move) {
     auto obj = this->create();
 
     list.insert_unique(obj);
-    list.insert_unique(std::move(obj)); 
+    list.insert_unique(std::move(obj));
 
     ASSERT_EQ(list.size(), 1);
 }
@@ -88,7 +90,7 @@ TYPED_TEST(SortedListTest, find_non_existing_element) {
         list.insert(val);
     }
 
-    auto not_in_list = this->create();  
+    auto not_in_list = this->create();
     auto it = list.find(not_in_list);
 
     if (it != list.end()) {
@@ -224,3 +226,4 @@ TYPED_TEST(SortedListTest, swap_exchanges_contents) {
     ASSERT_TRUE(std::is_sorted(list2.begin(), list2.end()));
 }
 
+}

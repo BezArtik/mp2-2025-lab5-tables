@@ -1,6 +1,6 @@
 #pragma once
-#include "polynomial/core/monomial.hpp"
-#include "polynomial/core/polynomial.hpp"
+#include "polynomial/monomial.hpp"
+#include "polynomial/polynomial.hpp"
 #include <type_traits>
 
 namespace polynomial {

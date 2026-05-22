@@ -32,11 +32,6 @@ public:
         using reference = T&;
 
         Iterator() = default;
-        Iterator(const Iterator&) = default;
-        Iterator& operator=(const Iterator&) = default;
-        Iterator(Iterator&&) = default;
-        Iterator& operator=(Iterator&&) = default;
-        ~Iterator() = default;
         Iterator(Node* node = nullptr) : curr_(node) {}
 
         reference operator*() const noexcept { return curr_->data_; }
@@ -64,6 +59,7 @@ public:
     private:
         Node* curr_;
         friend class List;
+        friend class ConstIterator;
     };
 
     class ConstIterator {
@@ -76,13 +72,8 @@ public:
 
 
         ConstIterator() = default;
-        ConstIterator(const ConstIterator&) = default;
-        ConstIterator& operator=(const ConstIterator&) = default;
-        ConstIterator(ConstIterator&&) = default;
-        ConstIterator& operator=(ConstIterator&&) = default;
-        ~ConstIterator() = default;
-        ConstIterator(const Iterator& it) : curr_(&(*it)) {}
         ConstIterator(const Node* node = nullptr) : curr_(node) {}
+        ConstIterator(const Iterator& it) noexcept : curr_(it.curr_) {}
 
         const_reference operator*() const noexcept { return curr_->data_; }
         const_pointer operator->() const noexcept { return &curr_->data_; }
@@ -118,7 +109,7 @@ public:
         sentinel_.next_ = sentinel_.prev_ = &sentinel_;
     }
 
-    template <typename Iter>
+    template <std::input_iterator Iter>
     List(Iter first, Iter last) : List() {
         insert(first, last);
     }
@@ -231,31 +222,29 @@ public:
         }
     }
 
-    template <typename Iter>
+    template <std::input_iterator Iter>
     void insert(Iter first, Iter last) {
         std::copy(first, last, std::back_inserter(*this));
     }
 
     template<typename... Args>
-    reference emplace_back(Args&&... args) {
+    void emplace_back(Args&&... args) {
         Node* p = create_node(std::forward<Args>(args)...);
         p->next_ = &sentinel_;
         p->prev_ = sentinel_.prev_;
         sentinel_.prev_->next_ = p;
         sentinel_.prev_ = p;
         ++size_;
-        return p->data_;
     }
 
     template<typename... Args>
-    reference emplace_front(Args&&... args) {
+    void emplace_front(Args&&... args) {
         Node* p = create_node(std::forward<Args>(args)...);
         p->next_ = sentinel_.next_;
         p->prev_ = &sentinel_;
         sentinel_.next_->prev_ = p;
         sentinel_.next_ = p;
         ++size_;
-        return p->data_;
     }
 
     template<typename... Args>

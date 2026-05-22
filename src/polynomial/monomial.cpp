@@ -1,4 +1,4 @@
-#include "polynomial/core/monomial.hpp"
+#include "polynomial/monomial.hpp"
 #include "containers/sorted_list.hpp"
 #include <string>
 #include <iostream>
@@ -11,6 +11,7 @@
 #include <numeric>
 #include <iterator>
 #include <initializer_list>
+#include <limits>
 
 namespace polynomial {
 
@@ -92,15 +93,13 @@ void Monomial::normalize() noexcept {
         }
         if (it->power_ == 0) {
             it = variables_.erase(it);
-        }
-        else {
+        } else {
             ++it;
         }
     }
 }
 
-
-Monomial::Monomial::Monomial(double coeff, std::initializer_list<Variable> vars)
+Monomial::Monomial(double coeff, std::initializer_list<Variable> vars)
     : Monomial(coeff, vars.begin(), vars.end()) {
 }
 
@@ -122,8 +121,7 @@ void Monomial::add_variable(const Variable& var) {
         if (updated.power_ != 0) {
             variables_.insert(updated);
         }
-    }
-    else {
+    } else {
         variables_.insert(var);
     }
 }
@@ -147,9 +145,10 @@ double Monomial::coefficient() const noexcept { return coefficient_; }
 void Monomial::set_coefficient(double coeff) noexcept { coefficient_ = coeff; }
 size_t Monomial::variables_count() const noexcept { return variables_.size(); }
 bool Monomial::has_variables() const noexcept { return !variables_.empty(); }
-bool Monomial::is_zero(double scalar) noexcept { return std::abs(scalar) < eps; }
+bool Monomial::is_zero(double scalar) noexcept { 
+    return std::abs(scalar) < std::numeric_limits<double>::epsilon(); 
+}
 bool Monomial::is_zero() const noexcept { return is_zero(coefficient_); }
-
 
 Monomial::iterator       Monomial::begin()        noexcept { return variables_.begin(); }
 Monomial::iterator       Monomial::end()          noexcept { return variables_.end(); }
@@ -192,6 +191,7 @@ bool MonomialCompare::operator()(const Monomial& lhs, const Monomial& rhs) const
 Monomial& Monomial::operator*=(double scalar) noexcept {
     if (is_zero(scalar)) {
         variables_.clear();
+        coefficient_ = 0.0;
         return *this;
     }
 
@@ -209,16 +209,6 @@ Monomial& Monomial::operator*=(const Monomial& other) {
     *this *= other.coefficient_;
     auto temp = other;
     variables_.merge(std::move(temp.variables_));
-    normalize();
-    return *this;
-}
-
-Monomial& Monomial::operator*=(Monomial&& other) {
-    if (variables_.empty() && other.variables_.empty()) {
-        return *this;
-    }
-    *this *= other.coefficient_;
-    variables_.merge(std::move(other.variables_));
     normalize();
     return *this;
 }

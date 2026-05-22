@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "polynomial/core/monomial.hpp"
+#include "polynomial/monomial.hpp"
 
-
+namespace tests {
 
 TEST(Monomial, monom_with_coeff_has_no_variables) {
 	polynomial::Monomial m(2.5);
@@ -111,4 +111,6 @@ TEST(Monomial, can_mul_monomials) {
 TEST(Monomial, mul_monom_by_scalar_is_commutative) {
 	polynomial::Monomial m("2yzx");
 	EXPECT_EQ(m * 2.5, 2.5 * m);
+}
+
 }

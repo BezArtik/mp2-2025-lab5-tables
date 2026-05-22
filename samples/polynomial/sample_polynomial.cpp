@@ -1,9 +1,10 @@
 #include "containers/vector.hpp"
-#include "tables/rb_tree.hpp"
 #include "tables/sorted_array.hpp"
 #include "tables/unsorted_array.hpp"
+#include "tables/rb_tree.hpp"
 #include "tables/hash_table.hpp"
-#include "polynomial/core/polynomial.hpp"
+#include "polynomial/polynomial.hpp"
+#include "hash/murmurhash.hpp"
 #include <iostream>
 #include <string>
 #include <exception>
@@ -12,42 +13,10 @@
 #include <memory>
 #include <cmath>
 #include <cstdint>
-#include <algorithm>
 #include <stdexcept>
+#include <type_traits>
 
 namespace sample {
-
-struct MurMurHash {
-    size_t operator()(const std::string& key) const noexcept {
-        const uint64_t m = 0xc6a4a7935bd1e995;
-        const int r = 47;
-        uint64_t h = 0x8445d61a4e774912 ^ (key.size() * m);
-        const uint64_t* data = reinterpret_cast<const uint64_t*>(key.data());
-        const uint64_t* end = data + (key.size() / 8);
-        while (data != end) {
-            uint64_t k = *data++;
-            k *= m;
-            k ^= k >> r;
-            k *= m;
-            h ^= k;
-            h *= m;
-        }
-        const uint8_t* data2 = reinterpret_cast<const uint8_t*>(data);
-        switch (key.size() & 7) {
-        case 7: h ^= static_cast<uint64_t>(data2[6]) << 48; break;
-        case 6: h ^= static_cast<uint64_t>(data2[5]) << 40; break;
-        case 5: h ^= static_cast<uint64_t>(data2[4]) << 32; break;
-        case 4: h ^= static_cast<uint64_t>(data2[3]) << 24; break;
-        case 3: h ^= static_cast<uint64_t>(data2[2]) << 16; break;
-        case 2: h ^= static_cast<uint64_t>(data2[1]) << 8;  break;
-        case 1: h ^= static_cast<uint64_t>(data2[0]); h *= m;
-        }
-        h ^= h >> r;
-        h *= m;
-        h ^= h >> r;
-        return static_cast<size_t>(h);
-    }
-};
 
 template <typename Key, typename Value>
 class ITable {
@@ -76,8 +45,8 @@ public:
     virtual void reset_op_count() noexcept = 0;
 };
 
-template <typename Key, typename Value>
-class UnsortedArrayITable : public ITable<Key, Value> {
+template <typename Key, typename Value, typename Table>
+class TableAdapter : public ITable<Key, Value> {
 public:
     using typename ITable<Key, Value>::key_type;
     using typename ITable<Key, Value>::mapped_type;
@@ -88,9 +57,7 @@ public:
     void insert(value_type&& value) override { table_.insert(std::move(value)); }
     std::optional<mapped_type> find(const key_type& key) const override {
         auto it = table_.find(key);
-        if (it != table_.end()) {
-            return it->second;
-        }
+        if (it != table_.end()) return it->second;
         return std::nullopt;
     }
     void remove(const key_type& key) override { table_.erase(key); }
@@ -98,111 +65,47 @@ public:
 
     size_type size() const noexcept override { return table_.size(); }
     size_type op_count() const noexcept override { return table_.op_count(); }
-    std::string type_name() const noexcept override { return "UnsortedArrayTable"; }
+    std::string type_name() const noexcept override { return table_.type_name(); }
     void reset_op_count() noexcept override { table_.reset_op_count(); }
 
 private:
-    tables::UnsortedArrayTable<key_type, mapped_type> table_;
+    Table table_;
 };
 
 template <typename Key, typename Value>
-class SortedArrayITable : public ITable<Key, Value> {
-public:
-    using typename ITable<Key, Value>::key_type;
-    using typename ITable<Key, Value>::mapped_type;
-    using typename ITable<Key, Value>::value_type;
-    using typename ITable<Key, Value>::size_type;
-
-    void insert(const value_type& value) override { table_.insert(value); }
-    void insert(value_type&& value) override { table_.insert(std::move(value)); }
-    std::optional<mapped_type> find(const key_type& key) const override {
-        auto it = table_.find(key);
-        if (it != table_.end()) {
-            return it->second;
-        }
-        return std::nullopt;
-    }
-    void remove(const key_type& key) override { table_.erase(key); }
-    bool contains(const key_type& key) const override { return table_.find(key) != table_.end(); }
-
-    size_type size() const noexcept override { return table_.size(); }
-    size_type op_count() const noexcept override { return table_.op_count(); }
-    std::string type_name() const noexcept override { return "SortedArrayTable"; }
-    void reset_op_count() noexcept override { table_.reset_op_count(); }
-
-private:
-    tables::SortedArrayTable<key_type, mapped_type> table_;
-};
+using UnsortedArrayAdapter = TableAdapter<Key, Value,
+    tables::UnsortedArrayTable<Key, Value>
+>;
 
 template <typename Key, typename Value>
-class RBTreeITable : public ITable<Key, Value> {
-public:
-    using typename ITable<Key, Value>::key_type;
-    using typename ITable<Key, Value>::mapped_type;
-    using typename ITable<Key, Value>::value_type;
-    using typename ITable<Key, Value>::size_type;
+using SortedArrayAdapter = TableAdapter<Key, Value,
+    tables::SortedArrayTable<Key, Value>
+>;
 
-    void insert(const value_type& value) override { table_.insert(value); }
-    void insert(value_type&& value) override { table_.insert(std::move(value)); }
-    std::optional<mapped_type> find(const key_type& key) const override {
-        auto it = table_.find(key);
-        if (it != table_.end()) {
-            return it->second;
-        }
-        return std::nullopt;
-    }
-    void remove(const key_type& key) override { table_.erase(key); }
-    bool contains(const key_type& key) const override { return table_.find(key) != table_.end(); }
+template <typename Key, typename Value,
+    typename Compare = std::less<Key>>
+    using RBTreeAdapter = TableAdapter<Key, Value,
+    tables::RBTreeTable<Key, Value, Compare>
+    >;
 
-    size_type size() const noexcept override { return table_.size(); }
-    size_type op_count() const noexcept override { return table_.op_count(); }
-    std::string type_name() const noexcept override { return "RBTreeTable"; }
-    void reset_op_count() noexcept override { table_.reset_op_count(); }
+template <typename Key, typename Value,
+    typename Hash = std::hash<Key>,
+    typename KeyEqual = std::equal_to<Key>>
+    using HashAdapter = TableAdapter<Key, Value,
+    tables::HashTable<Key, Value, Hash, KeyEqual>
+    >;
 
-private:
-    tables::RBTreeTable<key_type, mapped_type> table_;
-};
-
-template <typename Key, typename Value>
-class HashITable : public ITable<Key, Value> {
-public:
-    using typename ITable<Key, Value>::key_type;
-    using typename ITable<Key, Value>::mapped_type;
-    using typename ITable<Key, Value>::value_type;
-    using typename ITable<Key, Value>::size_type;
-
-    void insert(const value_type& value) override { table_.insert(value); }
-    void insert(value_type&& value) override { table_.insert(std::move(value)); }
-    std::optional<mapped_type> find(const key_type& key) const override {
-        auto it = table_.find(key);
-        if (it != table_.end()) {
-            return it->second;
-        }
-        return std::nullopt;
-    }
-    void remove(const key_type& key) override { table_.erase(key); }
-    bool contains(const key_type& key) const override { return table_.find(key) != table_.end(); }
-
-    size_type size() const noexcept override { return table_.size(); }
-    size_type op_count() const noexcept override { return table_.op_count(); }
-    std::string type_name() const noexcept override { return "HashTable"; }
-    void reset_op_count() noexcept override { table_.reset_op_count(); }
-
-private:
-    tables::HashTable<key_type, mapped_type, MurMurHash> table_;
-};
-
-
+    
 class ConsoleUIStringPoly {
     using key_t = std::string;
     using value_t = polynomial::Polynomial;
 public:
 
     ConsoleUIStringPoly() {
-        tables_.emplace_back(std::make_unique<UnsortedArrayITable<key_t, value_t>>());
-        tables_.emplace_back(std::make_unique<SortedArrayITable<key_t, value_t>>());
-        tables_.emplace_back(std::make_unique<RBTreeITable<key_t, value_t>>());
-        tables_.emplace_back(std::make_unique<HashITable<key_t, value_t>>());
+        tables_.emplace_back(std::make_unique<UnsortedArrayAdapter<key_t, value_t>>());
+        tables_.emplace_back(std::make_unique<SortedArrayAdapter<key_t, value_t>>());
+        tables_.emplace_back(std::make_unique<RBTreeAdapter<key_t, value_t>>());
+        tables_.emplace_back(std::make_unique<HashAdapter<key_t, value_t, hash::MurMurHash>>());
     }
 
     void run() {
@@ -231,7 +134,6 @@ public:
         }
     }
 
-
 private:
     using ptr_table = std::unique_ptr<ITable<key_t, value_t>>;
     containers::Vector<ptr_table> tables_;
@@ -255,8 +157,7 @@ private:
         return key;
     }
 
-    void insert_poly(const value_t& poly) {
-        auto key = read_key_from_console();
+    void insert_poly(const value_t& poly, const key_t& key) {
         for (auto& table : tables_) {
             table->insert({ key, poly });
             std::cout << "Inserted into " << table->type_name() << ": " << key << " -> " << poly << std::endl;
@@ -265,9 +166,15 @@ private:
         }
     }
 
+    void insert_poly(const value_t& poly) {
+        auto key = read_key_from_console();
+        insert_poly(poly, key);
+    }
+
     void insert_poly() {
         auto key = read_key_from_console();
-        insert_poly(read_poly_from_console());
+        auto poly = read_poly_from_console();
+        insert_poly(poly, key);
     }
 
     void find_poly() const {

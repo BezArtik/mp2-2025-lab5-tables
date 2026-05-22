@@ -56,6 +56,7 @@ public:
         data_.reserve(new_cap);
     }
 
+	std::string type_name() const noexcept { return "SortedArrayTable"; }
     size_type op_count() const noexcept { return count_; }
     void reset_op_count() noexcept { count_ = 0; }
     bool empty() const noexcept { return data_.empty(); }
@@ -71,7 +72,6 @@ public:
 
 private:
     containers::Vector<value_type> data_;
-    size_type size_ = 0;
     mutable size_type count_ = 0;
 
     template <typename Iter>

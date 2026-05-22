@@ -1,6 +1,6 @@
 #include "generators/generators.hpp"
-#include "polynomial/core/monomial.hpp"
-#include "polynomial/core/polynomial.hpp"
+#include "polynomial/monomial.hpp"
+#include "polynomial/polynomial.hpp"
 #include "containers/vector.hpp"
 #include <random>
 #include <string>
@@ -33,9 +33,8 @@ MonomialGenerator::MonomialGenerator(double coeff_min, double coeff_max)
 }
 
 polynomial::Monomial MonomialGenerator::MonomialGenerator::operator()() {
-    size_t var_count = gen_() % 10;
-    containers::Vector<polynomial::Variable> vars(var_count);
-    std::generate_n(vars.begin(), var_count,
+    containers::Vector<polynomial::Variable> vars(gen_() % 10);
+    std::generate(vars.begin(), vars.end(),
         [this]() -> polynomial::Variable {
             uint8_t var_name = 'a' + (gen_() % 26);
             int32_t var_power = gen_() % 20;
@@ -51,9 +50,8 @@ PolynomialGenerator::PolynomialGenerator(size_t max_monomials)
 }
 
 polynomial::Polynomial PolynomialGenerator::operator()() {
-    size_t monom_count = monom_count_dis_(gen_);
-    containers::Vector<polynomial::Monomial> monoms(monom_count);
-    std::generate_n(monoms.begin(), monom_count, monom_gen_);
+    containers::Vector<polynomial::Monomial> monoms(monom_count_dis_(gen_));
+    std::generate(monoms.begin(), monoms.end(), monom_gen_);
     return polynomial::Polynomial(monoms.begin(), monoms.end());
 }
 

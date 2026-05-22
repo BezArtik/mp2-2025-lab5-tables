@@ -1,8 +1,9 @@
 add_library(polynomial_lib STATIC
-    polynomial/core/polynomial.cpp
-    polynomial/core/monomial.cpp
-    polynomial/hash/monomial_hash.cpp 
-    polynomial/hash/polynomial_hash.cpp
+    polynomial/polynomial.cpp
+    polynomial/monomial.cpp
+    hash/monomial_hash.cpp
+    hash/polynomial_hash.cpp
+    hash/murmurhash.cpp
     generators/generators.cpp
 )
 
@@ -18,12 +19,4 @@ target_link_libraries(polynomial_lib
         containers  
 )
 
-target_compile_features(polynomial_lib PUBLIC cxx_std_20)
-
 add_library(project::polynomial ALIAS polynomial_lib)
-
-
-add_library(project_compiled INTERFACE)
-target_link_libraries(project_compiled INTERFACE
-    polynomial_lib
-)

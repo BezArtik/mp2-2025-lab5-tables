@@ -1,12 +1,10 @@
-#include "polynomial/core/polynomial.hpp"
-#include "polynomial/core/monomial.hpp"
+#include "polynomial/polynomial.hpp"
+#include "polynomial/monomial.hpp"
 #include "containers/sorted_list.hpp"
 #include "containers/vector.hpp"
-#include <limits>
 #include <string>
 #include <iostream>
 #include <cctype>
-#include <cstdlib>
 #include <algorithm>
 #include <utility>
 #include <cstdint>
@@ -100,18 +98,7 @@ Polynomial& Polynomial::operator+=(const Monomial& rhs) {
     return *this;
 }
 
-Polynomial& Polynomial::operator+=(Monomial&& rhs) {
-    if (rhs.is_zero()) return *this;
-    monomials_.insert(std::move(rhs));
-    combine_like_terms();
-    return *this;
-}
-
 Polynomial& Polynomial::operator-=(const Monomial& rhs) {
-    return *this += (-1.0) * rhs;
-}
-
-Polynomial& Polynomial::operator-=(Monomial&& rhs) {
     return *this += (-1.0) * rhs;
 }
 
@@ -123,19 +110,8 @@ Polynomial& Polynomial::operator+=(const Polynomial& rhs) {
     return *this;
 }
 
-Polynomial& Polynomial::operator+=(Polynomial&& rhs) {
-    if (rhs.is_zero()) return *this;
-    monomials_.merge(std::move(rhs.monomials_));
-    combine_like_terms();
-    return *this;
-}
-
 Polynomial& Polynomial::operator-=(const Polynomial& rhs) {
     return *this += (-1.0) * rhs;
-}
-
-Polynomial& Polynomial::operator-=(Polynomial&& rhs) {
-    return *this += (-1.0) * std::move(rhs);
 }
 
 Polynomial& Polynomial::operator*=(double scalar) noexcept {
@@ -183,16 +159,8 @@ Polynomial operator+(Polynomial lhs, const Polynomial& rhs) {
     return lhs += rhs; 
 }
 
-Polynomial operator+(Polynomial lhs, Polynomial&& rhs) {
-    return lhs += std::move(rhs); 
-}
-
 Polynomial operator-(Polynomial lhs, const Polynomial& rhs) {
     return lhs -= rhs;
-}
-
-Polynomial operator-(Polynomial lhs, Polynomial&& rhs) {
-    return lhs -= std::move(rhs);
 }
 
 Polynomial operator*(Polynomial lhs, double scalar) noexcept {
@@ -207,16 +175,8 @@ Polynomial operator*(Polynomial lhs, const Monomial& rhs) {
     return lhs *= rhs;
 }
 
-Polynomial operator*(Polynomial lhs, Monomial&& rhs) {
-    return lhs *= std::move(rhs);
-}
-
 Polynomial operator*(Monomial lhs, const Polynomial& rhs) {
     return rhs * std::move(lhs);
-}
-
-Polynomial operator*(Monomial lhs, Polynomial&& rhs) {
-    return std::move(rhs) *= std::move(lhs);
 }
 
 Polynomial operator*(Polynomial lhs, const Polynomial& rhs) {
@@ -262,7 +222,8 @@ std::ostream& operator<<(std::ostream& ostr, const Polynomial& p) {
 
     std::for_each(std::next(it), p.end(),
         [&ostr](const auto& monom) {
-            monom.coefficient() >= 0.0 ? ostr << " + " << monom : ostr << " - " << (-1.0) * monom;
+            monom.coefficient() >= 0.0 ? 
+                ostr << " + " << monom : ostr << " - " << (-1.0) * monom;
         });
 
     return ostr;

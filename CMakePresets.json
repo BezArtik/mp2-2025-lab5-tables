@@ -31,8 +31,50 @@
       "cacheVariables": {
         "BUILD_TESTS": "OFF"
       }
+    },
+    
+    {
+      "name": "gcc-base",
+      "hidden": true,
+      "description": "Base configuration for MinGW GCC",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_CXX_EXTENSIONS": "OFF",
+        "BUILD_SAMPLES": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      },
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "environment": {
+        "CC": "gcc",
+        "CXX": "g++"
+      }
+    },
+    {
+      "name": "gcc-debug",
+      "displayName": "GCC Debug",
+      "description": "GCC build with debug symbols (-g)",
+      "inherits": "gcc-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "gcc-release",
+      "displayName": "GCC Release",
+      "description": "GCC build with optimizations (-O3)",
+      "inherits": "gcc-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_TESTS": "OFF"
+      }
     }
   ],
+  
   "buildPresets": [
     {
       "name": "msvc-debug",
@@ -45,14 +87,33 @@
       "configurePreset": "msvc-release",
       "configuration": "Release",
       "displayName": "Build MSVC Release"
+    },
+    
+    {
+      "name": "gcc-debug",
+      "configurePreset": "gcc-debug",
+      "displayName": "Build GCC Debug"
+    },
+    {
+      "name": "gcc-release",
+      "configurePreset": "gcc-release",
+      "displayName": "Build GCC Release"
     }
   ],
+  
   "testPresets": [
     {
       "name": "msvc-debug",
       "configurePreset": "msvc-debug",
       "configuration": "Debug",
       "displayName": "Test MSVC Debug"
+    },
+    
+    {
+      "name": "gcc-debug",
+      "configurePreset": "gcc-debug",
+      "configuration": "Debug",
+      "displayName": "Test GCC Debug"
     }
   ]
 }

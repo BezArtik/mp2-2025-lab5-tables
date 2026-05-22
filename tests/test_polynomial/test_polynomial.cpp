@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
-#include "polynomial/core/monomial.hpp"
-#include "polynomial/core/polynomial.hpp"
+#include "polynomial/monomial.hpp"
+#include "polynomial/polynomial.hpp"
+
+namespace tests {
 
 TEST(Polynomial, empty_poly_has_zero_deg) {
 	polynomial::Polynomial p;
@@ -154,3 +156,4 @@ TEST(Polynomial, mul_by_zero_clears_the_poly) {
 	EXPECT_TRUE(p.is_zero());
 }
 
+}

@@ -10,7 +10,7 @@ template <typename Key,
     typename T,
     typename Compare = std::less<Key>>
 class RBTreeTable {
-    struct Node;
+struct Node;
 public:
     using key_type = Key;
     using mapped_type = T;
@@ -40,8 +40,7 @@ public:
         if (other.root_ != other.nil_) {
             root_ = copy_subtree(other.root_, other.nil_, nil_);
             size_ = other.size_;
-        }
-        else {
+        } else {
             root_ = nil_;
         }
     }
@@ -73,18 +72,19 @@ public:
     }
 
     void swap(RBTreeTable& other) noexcept {
-        std::swap(root_, other.root_);
-        std::swap(nil_, other.nil_);
-        std::swap(size_, other.size_);
-        std::swap(comp_, other.comp_);
-        std::swap(count_, other.count_);
+        using std::swap;
+        swap(root_, other.root_);
+        swap(nil_, other.nil_);
+        swap(size_, other.size_);
+        swap(comp_, other.comp_);
+        swap(count_, other.count_);
     }
 
     class Iterator {
     public:
         using iterator_category = std::forward_iterator_tag;
         using value_type = typename RBTreeTable::value_type;
-        using difference_type = ptrdiff_t;
+        using difference_type = typename RBTreeTable::difference_type;
         using pointer = value_type*;
         using reference = value_type&;
 
@@ -108,8 +108,7 @@ public:
 
             if (node_->right_ != nil_) {
                 node_ = min(node_->right_);
-            }
-            else {
+            } else {
                 Node* parent = node_->parent_;
                 while (parent != nil_ && node_ == parent->right_) {
                     node_ = parent;
@@ -137,13 +136,14 @@ public:
             return node;
         }
         friend class RBTreeTable;
+        friend class ConstIterator;
     };
 
     class ConstIterator {
     public:
         using iterator_category = std::forward_iterator_tag;
         using value_type = const typename RBTreeTable::value_type;
-        using difference_type = ptrdiff_t;
+        using difference_type = typename RBTreeTable::difference_type;
         using pointer = value_type*;
         using reference = value_type&;
 
@@ -171,8 +171,7 @@ public:
 
             if (node_->right_ != nil_) {
                 node_ = min(node_->right_);
-            }
-            else {
+            } else {
                 const Node* parent = node_->parent_;
                 while (parent != nil_ && node_ == parent->right_) {
                     node_ = parent;
@@ -219,13 +218,13 @@ public:
 
     iterator erase(const_iterator pos) noexcept {
         return erase_impl(pos);
-	}
+    }
 
     iterator erase(const key_type& key) noexcept {
         auto it = find(key);
         if (it != end()) return erase(it);
         return end();
-	}
+    }
 
     iterator find(const key_type& key) noexcept {
         return find_impl<iterator>(root_, nil_, key);
@@ -235,26 +234,13 @@ public:
         return find_impl<const_iterator>(root_, nil_, key);
     }
 
+    std::string type_name() const noexcept { return "RBTreeTable"; }
     size_type op_count() const noexcept { return count_; }
     void reset_op_count() noexcept { count_ = 0; }
     size_type size() const noexcept { return size_; }
     bool empty() const noexcept { return size_ == 0; }
     void clear() noexcept {
-        if (is_nil(root_)) return;
-
-        containers::Stack<Node*> stack;
-        stack.push(root_);
-
-        while (!stack.empty()) {
-            Node* node = stack.top();
-            stack.pop();
-
-            if (!is_nil(node->left_)) stack.push(node->left_);
-            if (!is_nil(node->right_)) stack.push(node->right_);
-
-            delete node;
-        }
-
+        clear_impl(root_);
         root_ = nil_;
         size_ = 0;
     }
@@ -401,7 +387,7 @@ private:
         while (is_red(z->parent_)) {
             ++count_;
             if (z->parent_ == z->grandparent()->left_) {
-                Node* y = z->grandparent()->right_; 
+                Node* y = z->grandparent()->right_;
 
                 if (is_red(y)) {
                     set_black(z->parent_);
@@ -418,7 +404,7 @@ private:
                     right_rotate(z->grandparent());
                 }
             } else {
-                Node* y = z->grandparent()->left_; 
+                Node* y = z->grandparent()->left_;
 
                 if (is_red(y)) {
                     set_black(z->parent_);
@@ -443,7 +429,7 @@ private:
         while (x != root_ && is_black(x)) {
             ++count_;
             if (x == x->parent_->left_) {
-                Node* w = x->parent_->right_; 
+                Node* w = x->parent_->right_;
 
                 if (is_red(w)) {
                     set_black(w);
@@ -538,7 +524,7 @@ private:
             transplant(z, y);
             y->left_ = z->left_;
             y->left_->parent_ = y;
-            set_color(y, z->color_);  
+            set_color(y, z->color_);
         }
 
         delete z;
@@ -566,7 +552,7 @@ private:
     }
 
     template <typename Iter>
-	Iter erase_impl(Iter pos) noexcept {
+    Iter erase_impl(Iter pos) noexcept {
         if (pos == end()) return end();
         Node* node = pos.node_;
         Iter next = pos;
@@ -614,44 +600,28 @@ private:
     }
 
     Node* copy_subtree(Node* other_node, Node* other_nil, Node* my_nil) {
-		if (other_node == other_nil) return my_nil;
-            
-        containers::Stack<std::pair<Node*, Node*>> stack;
+        if (other_node == other_nil) return my_nil;
 
-        Node* new_root = create_node(
-            other_node->data_.first, 
-            other_node->data_.second, 
-            other_node->color_);
-        new_root->parent_ = my_nil;
-        stack.push({ other_node, new_root });
+        Node* new_node = create_node(
+            other_node->data_.first,
+            other_node->data_.second,
+            other_node->color_
+        );
 
-        while(!stack.empty()) {
-            auto [other_curr, new_curr] = stack.top(); stack.pop();
-            if (other_curr->left_ != other_nil) {
-                Node* left_child = create_node(
-                    other_curr->left_->data_.first,
-                    other_curr->left_->data_.second,
-                    other_curr->left_->color_);
-                left_child->parent_ = new_curr;
-                new_curr->left_ = left_child;
-                stack.push({ other_curr->left_, left_child });
-            } else {
-                new_curr->left_ = my_nil;
-            }
-            if (other_curr->right_ != other_nil) {
-                Node* right_child = create_node(
-                    other_curr->right_->data_.first,
-                    other_curr->right_->data_.second,
-                    other_curr->right_->color_);
-                right_child->parent_ = new_curr;
-                new_curr->right_ = right_child;
-                stack.push({ other_curr->right_, right_child });
-            } else {
-                new_curr->right_ = my_nil;
-            }
-        }
-        return new_root;
+        new_node->left_ = copy_subtree(other_node->left_, other_nil, my_nil);
+        new_node->right_ = copy_subtree(other_node->right_, other_nil, my_nil);
 
+        if (new_node->left_ != my_nil) new_node->left_->parent_ = new_node;
+        if (new_node->right_ != my_nil) new_node->right_->parent_ = new_node;
+
+        return new_node;
+    }
+
+    void clear_impl(Node* node) noexcept {
+        if (is_nil(node)) return;
+        clear_impl(node->left_);
+        clear_impl(node->right_);
+        delete node;
     }
 
 };

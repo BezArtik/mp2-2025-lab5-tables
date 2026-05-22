@@ -1,46 +1,14 @@
 #pragma once
 #include "containers/vector.hpp"
-#include "polynomial/core/monomial.hpp"
-#include "polynomial/core/polynomial.hpp"
 #include "generators/generators.hpp"
 #include <gtest/gtest.h>
 #include <stdexcept>
 #include <random>
-#include <type_traits>
-#include <string>
 #include <utility>
+#include <algorithm>
+#include <iterator>
 
 namespace tests {
-
-template<typename T>
-struct Generator {
-    T operator()() const {
-        if constexpr (std::is_same_v<T, std::string>) {
-            return gen::StringGenerator{}();
-        } else if constexpr (std::is_same_v<T, polynomial::Monomial>) {
-            return gen::MonomialGenerator{}();
-        } else if constexpr (std::is_same_v<T, polynomial::Polynomial>) {
-            return gen::PolynomialGenerator{}();
-        } else if constexpr (std::is_same_v<T, int>) {
-            static std::mt19937_64 gen(std::random_device{}());
-            static std::uniform_int_distribution<int> dist(-10'000, 10'000);
-            return dist(gen);
-        } else if constexpr (std::is_same_v<T, double>) {
-            static std::mt19937_64 gen(std::random_device{}());
-            static std::uniform_real_distribution<double> dist(-10'000.0, 10'000.0);
-            return dist(gen);
-        } else {
-            return T{};
-        }
-    }
-};
-
-template<typename Key, typename Value>
-struct PairGenerator {
-    std::pair<Key, Value> operator()() const {
-        return { Generator<Key>{}(), Generator<Value>{}() };
-    }
-};
 
 template<typename TableType>
 class TableTest : public ::testing::Test {
@@ -50,19 +18,19 @@ protected:
     using Value = typename Table::mapped_type;
     using Pair = typename Table::value_type;
 
-    Table table;
+    Table table_;
 
-    Key create_key() const { return Generator<Key>{}(); }
-    Value create_value() const { return Generator<Value>{}(); }
-    Pair create_pair() const { return PairGenerator<Key, Value>{}(); }
+    Key create_key() const { return gen::Generator<Key>{}(); }
+    Value create_value() const { return gen::Generator<Value>{}(); }
+    Pair create_pair() const { return gen::PairGenerator<Key, Value>{}(); }
 
     auto create_pair_sequence(size_t n) const {
         containers::Vector<Pair> result(n);
-        std::generate_n(result.begin(), n, PairGenerator<Key, Value>{});
+        std::generate(result.begin(), result.end(), gen::PairGenerator<Key, Value>{});
         return result;
     }
 
-    template <typename InputIt>
+    template <std::input_iterator InputIt>
     auto create_unique_key(InputIt first, InputIt last) const {
         const int max_attempts = 1000;
         for (int attempt = 0; attempt < max_attempts; ++attempt) {
@@ -76,24 +44,25 @@ protected:
         throw std::runtime_error("Failed to generate unique key");
     }
 
-    template<typename InputIt>
+    template<std::input_iterator InputIt>
     void insert_sequence(InputIt first, InputIt last) {
-        std::for_each(first, last, [this](const auto& p) { table.insert(p); });
+        std::for_each(first, last, 
+            [this](const auto& p) { table_.insert(p); });
     }
 
-    template<typename InputIt>
+    template<std::input_iterator InputIt>
     bool all_keys_present(InputIt first, InputIt last) const {
         return std::all_of(first, last,
             [this](const auto& p) {
-                return table.find(p.first) != table.end();
+                return table_.find(p.first) != table_.end();
             });
     }
 
-    template<typename InputIt>
+    template<std::input_iterator InputIt>
     size_t count_successful_finds(InputIt first, InputIt last) const {
         return std::count_if(first, last,
             [this](const auto& p) {
-                return table.find(p.first) != table.end();
+                return table_.find(p.first) != table_.end();
             });
     }
 };
@@ -105,11 +74,11 @@ TYPED_TEST_P(TableTest, insert_new_elements) {
 
     containers::Vector<bool> insert_results;
     std::transform(pairs.begin(), pairs.end(), std::back_inserter(insert_results),
-        [this](const auto& p) { return this->table.insert(p).second; });
+        [this](const auto& p) { return this->table_.insert(p).second; });
 
     EXPECT_TRUE(std::all_of(insert_results.begin(), insert_results.end(),
         [](bool b) { return b; }));
-    EXPECT_EQ(this->table.size(), pairs.size());
+    EXPECT_EQ(this->table_.size(), pairs.size());
     EXPECT_TRUE(this->all_keys_present(pairs.begin(), pairs.end()));
 }
 
@@ -118,14 +87,14 @@ TYPED_TEST_P(TableTest, insert_existing_key) {
     auto new_value = this->create_value();
     auto updated_pair = std::make_pair(pair.first, new_value);
 
-    auto [it1, inserted1] = this->table.insert(pair);
-    auto [it2, inserted2] = this->table.insert(updated_pair);
+    auto [it1, inserted1] = this->table_.insert(pair);
+    auto [it2, inserted2] = this->table_.insert(updated_pair);
 
     EXPECT_TRUE(inserted1);
     EXPECT_FALSE(inserted2);
     EXPECT_EQ(it1, it2);
     EXPECT_EQ(it1->second, new_value);
-    EXPECT_EQ(this->table.size(), 1);
+    EXPECT_EQ(this->table_.size(), 1);
 }
 
 TYPED_TEST_P(TableTest, find_operations) {
@@ -136,28 +105,28 @@ TYPED_TEST_P(TableTest, find_operations) {
 
     auto non_existent = this->create_unique_key(pairs.begin(), pairs.end());
 
-    EXPECT_EQ(this->table.find(non_existent), this->table.end());
+    EXPECT_EQ(this->table_.find(non_existent), this->table_.end());
 }
 
 TYPED_TEST_P(TableTest, erase_by_key) {
     auto pairs = this->create_pair_sequence(15);
     this->insert_sequence(pairs.begin(), pairs.end());
 
-    auto original_size = this->table.size();
+    auto original_size = this->table_.size();
 
     for (size_t i = 0; i < pairs.size(); i += 3) {
-        this->table.erase(pairs[i].first);
+        this->table_.erase(pairs[i].first);
     }
 
-    EXPECT_EQ(this->table.size(), original_size - (pairs.size() + 2) / 3);
+    EXPECT_EQ(this->table_.size(), original_size - (pairs.size() + 2) / 3);
 
     for (size_t i = 0; i < pairs.size(); i += 3) {
-        EXPECT_EQ(this->table.find(pairs[i].first), this->table.end());
+        EXPECT_EQ(this->table_.find(pairs[i].first), this->table_.end());
     }
 
     for (size_t i = 0; i < pairs.size(); ++i) {
         if (i % 3 != 0) {
-            EXPECT_NE(this->table.find(pairs[i].first), this->table.end());
+            EXPECT_NE(this->table_.find(pairs[i].first), this->table_.end());
         }
     }
 }
@@ -168,11 +137,11 @@ TYPED_TEST_P(TableTest, erase_nonexistent_key) {
 
     auto non_existent = this->create_unique_key(pairs.begin(), pairs.end());
 
-    auto size_before = this->table.size();
-    auto result = this->table.erase(non_existent);
+    auto size_before = this->table_.size();
+    auto result = this->table_.erase(non_existent);
 
-    EXPECT_EQ(result, this->table.end());
-    EXPECT_EQ(this->table.size(), size_before);
+    EXPECT_EQ(result, this->table_.end());
+    EXPECT_EQ(this->table_.size(), size_before);
 
     EXPECT_TRUE(this->all_keys_present(pairs.begin(), pairs.end()));
 }
@@ -181,45 +150,45 @@ TYPED_TEST_P(TableTest, erase_by_iterator) {
     auto pairs = this->create_pair_sequence(5); 
     this->insert_sequence(pairs.begin(), pairs.end());
 
-    auto it = this->table.begin();
+    auto it = this->table_.begin();
     std::advance(it, 2);
-    auto next = this->table.erase(it);
+    auto next = this->table_.erase(it);
 
-    EXPECT_EQ(this->table.size(), 4);
-    EXPECT_NE(next, this->table.end());
+    EXPECT_EQ(this->table_.size(), 4);
+    EXPECT_NE(next, this->table_.end());
 
-    while (!this->table.empty()) {
-        this->table.erase(this->table.begin());
+    while (!this->table_.empty()) {
+        this->table_.erase(this->table_.begin());
     }
 
-    EXPECT_TRUE(this->table.empty());
+    EXPECT_TRUE(this->table_.empty());
 }
 
 TYPED_TEST_P(TableTest, clear_operations) {
     auto pairs = this->create_pair_sequence(10);
     this->insert_sequence(pairs.begin(), pairs.end());
 
-    EXPECT_FALSE(this->table.empty());
-    this->table.clear();
-    EXPECT_TRUE(this->table.empty());
-    EXPECT_EQ(this->table.size(), 0);
-    EXPECT_EQ(this->table.begin(), this->table.end());
+    EXPECT_FALSE(this->table_.empty());
+    this->table_.clear();
+    EXPECT_TRUE(this->table_.empty());
+    EXPECT_EQ(this->table_.size(), 0);
+    EXPECT_EQ(this->table_.begin(), this->table_.end());
 }
 
 TYPED_TEST_P(TableTest, iterator_traversal) {
     auto pairs = this->create_pair_sequence(8); 
     this->insert_sequence(pairs.begin(), pairs.end());
 
-    auto count = std::distance(this->table.begin(), this->table.end());
+    auto count = std::distance(this->table_.begin(), this->table_.end());
     EXPECT_EQ(count, pairs.size());
 
     count = 0;
-    for ([[maybe_unused]] const auto& _ : this->table) {
+    for ([[maybe_unused]] const auto& _ : this->table_) {
         ++count;
     }
     EXPECT_EQ(count, pairs.size());
 
-    const auto& const_table = this->table;
+    const auto& const_table = this->table_;
     count = std::distance(const_table.begin(), const_table.end());
     EXPECT_EQ(count, pairs.size());
 }
@@ -229,10 +198,10 @@ TYPED_TEST_P(TableTest, move_semantics) {
     auto value1 = this->create_value();
     auto value2 = this->create_value();
 
-    auto [it1, inserted1] = this->table.insert({ key, std::move(value1) });
+    auto [it1, inserted1] = this->table_.insert({ key, std::move(value1) });
     EXPECT_TRUE(inserted1);
 
-    auto [it2, inserted2] = this->table.insert({ key, std::move(value2) });
+    auto [it2, inserted2] = this->table_.insert({ key, std::move(value2) });
     EXPECT_FALSE(inserted2);
     EXPECT_EQ(it1, it2);
 }

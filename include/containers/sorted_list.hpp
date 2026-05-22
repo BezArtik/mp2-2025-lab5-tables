@@ -21,10 +21,10 @@ public:
 
     SortedList() = default;
 
-    template<typename It>
-    SortedList(It begin, It end) {
-        std::copy(begin, end, std::back_inserter(list_));
-        sort();
+    template<std::input_iterator Iter>
+    SortedList(Iter first, Iter last) {
+        std::copy(first, last, std::back_inserter(list_));
+        list_.sort(comp_);
     }
 
     SortedList(std::initializer_list<value_type> init) : SortedList(init.begin(), init.end()) {}
@@ -104,10 +104,6 @@ public:
 private:
     List<value_type> list_;
     Compare comp_;
-
-    void sort() noexcept {
-        list_.sort(comp_);
-    }
 };
 
 template <typename T, typename Compare>

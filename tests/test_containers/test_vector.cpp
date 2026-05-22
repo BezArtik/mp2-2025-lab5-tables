@@ -1,4 +1,4 @@
-#include "test_common_containers/test_common_containers.hpp"
+#include "test_common/test_common_containers.hpp"
 #include "containers/vector.hpp"
 #include <gtest/gtest.h>
 #include <string>
@@ -6,15 +6,16 @@
 #include <memory>
 #include <stdexcept>
 #include <algorithm>
-#include <cstdint>
 #include <iterator>
 
+namespace tests {
+
 template<typename T>
-class VectorTest : public tests::TypedContainerTest<T> {};
+class VectorTest : public ContainerTest<T> {};
 
-TYPED_TEST_SUITE(VectorTest, tests::FunctionalTypes);
+TYPED_TEST_SUITE(VectorTest, FunctionalTypes);
 
-TYPED_TEST(VectorTest, can_create_empty_vector) {
+TYPED_TEST(VectorTest, can_create_empty) {
     ASSERT_NO_THROW(containers::Vector<TypeParam> vec);
     containers::Vector<TypeParam> vec;
     ASSERT_EQ(vec.size(), 0);
@@ -22,30 +23,30 @@ TYPED_TEST(VectorTest, can_create_empty_vector) {
     ASSERT_EQ(vec.capacity(), 0);
 }
 
-TYPED_TEST(VectorTest, can_create_vector_with_size) {
+TYPED_TEST(VectorTest, can_create_with_size) {
     containers::Vector<TypeParam> vec(5);
     ASSERT_EQ(vec.size(), 5);
     ASSERT_GE(vec.capacity(), 5);
 }
 
-TYPED_TEST(VectorTest, can_create_vector_with_size_and_value) {
+TYPED_TEST(VectorTest, can_create_with_size_and_value) {
     auto obj = this->create();
     containers::Vector<TypeParam> vec(5, obj);
     ASSERT_EQ(vec.size(), 5);
-    ASSERT_TRUE(std::all_of(vec.begin(), vec.end(), 
+    ASSERT_TRUE(std::all_of(vec.begin(), vec.end(),
         [&obj](const auto& elem) {
-        return elem == obj;
+            return elem == obj;
         }));
 }
 
-TYPED_TEST(VectorTest, can_create_vector_from_initializer_list) {
+TYPED_TEST(VectorTest, can_create_from_initializer_list) {
     auto seq = this->create_sequence(5);
     containers::Vector<TypeParam> vec = { seq[0], seq[1], seq[2], seq[3], seq[4] };
     ASSERT_EQ(vec.size(), 5);
     ASSERT_TRUE(std::equal(vec.begin(), vec.end(), seq.begin()));
 }
 
-TYPED_TEST(VectorTest, can_copy_vector) {
+TYPED_TEST(VectorTest, can_copy) {
     containers::Vector<TypeParam> vec1;
     auto obj = this->create();
     vec1.push_back(obj);
@@ -56,7 +57,7 @@ TYPED_TEST(VectorTest, can_copy_vector) {
     ASSERT_EQ(vec1.size(), 1);
 }
 
-TYPED_TEST(VectorTest, can_move_vector) {
+TYPED_TEST(VectorTest, can_move) {
     containers::Vector<TypeParam> vec1;
     auto obj = this->create();
     vec1.push_back(obj);
@@ -171,7 +172,7 @@ TYPED_TEST(VectorTest, can_pop_back) {
     ASSERT_EQ(vec.size(), 0);
 }
 
-TYPED_TEST(VectorTest, can_clear_vector) {
+TYPED_TEST(VectorTest, can_clear) {
     containers::Vector<TypeParam> vec;
     vec.push_back(this->create());
     vec.push_back(this->create());
@@ -210,9 +211,9 @@ TYPED_TEST(VectorTest, resize_increases_size) {
 
     vec.resize(5, obj);
     ASSERT_EQ(vec.size(), 5);
-    ASSERT_TRUE(std::all_of(vec.begin(), vec.end(), 
+    ASSERT_TRUE(std::all_of(vec.begin(), vec.end(),
         [&obj](const auto& elem) {
-        return elem == obj;
+            return elem == obj;
         }));
 }
 
@@ -299,7 +300,7 @@ TYPED_TEST(VectorTest, iterator_random_access) {
     ASSERT_EQ(*it, seq[3]);
 }
 
-TYPED_TEST(VectorTest, can_swap_vectors) {
+TYPED_TEST(VectorTest, can_swaps) {
     containers::Vector<TypeParam> vec1;
     auto obj1 = this->create();
     vec1.push_back(obj1);
@@ -357,3 +358,4 @@ TYPED_TEST(VectorTest, can_emplace_back_move_only) {
     ASSERT_EQ(*vec[0], obj);
 }
 
+}

@@ -1,4 +1,4 @@
-#include "test_common_containers/test_common_containers.hpp"
+#include "test_common/test_common_containers.hpp"
 #include "containers/list.hpp"
 #include <gtest/gtest.h>
 #include <string>
@@ -8,26 +8,28 @@
 #include <algorithm>
 #include <iterator>
 
+namespace tests {
+
 template<typename T>
-class ListTest : public tests::TypedContainerTest<T> {};
+class ListTest : public ContainerTest<T> {};
 
-TYPED_TEST_SUITE(ListTest, tests::FunctionalTypes);
+TYPED_TEST_SUITE(ListTest, FunctionalTypes);
 
-TYPED_TEST(ListTest, can_create_empty_list) {
+TYPED_TEST(ListTest, can_create_empty) {
     ASSERT_NO_THROW(containers::List<TypeParam> list);
     containers::List<TypeParam> list;
     ASSERT_EQ(list.size(), 0);
     ASSERT_TRUE(list.empty());
 }
 
-TYPED_TEST(ListTest, can_create_list_from_initializer_list) {
+TYPED_TEST(ListTest, can_create_from_initializer_list) {
     auto seq = this->create_sequence(5);
     containers::List<TypeParam> list = { seq[0], seq[1], seq[2], seq[3], seq[4] };
     ASSERT_EQ(list.size(), 5);
     ASSERT_TRUE(std::equal(list.begin(), list.end(), seq.begin()));
 }
 
-TYPED_TEST(ListTest, can_copy_list) {
+TYPED_TEST(ListTest, can_copy) {
     containers::List<TypeParam> list1;
     auto obj = this->create();
     list1.push_back(obj);
@@ -38,7 +40,7 @@ TYPED_TEST(ListTest, can_copy_list) {
     ASSERT_EQ(list1.size(), 1);
 }
 
-TYPED_TEST(ListTest, can_move_list) {
+TYPED_TEST(ListTest, can_move) {
     containers::List<TypeParam> list1;
     auto obj = this->create();
     list1.push_back(obj);
@@ -111,7 +113,7 @@ TYPED_TEST(ListTest, can_pop_back) {
     ASSERT_EQ(list.size(), 0);
 }
 
-TYPED_TEST(ListTest, can_clear_list) {
+TYPED_TEST(ListTest, can_clear) {
     containers::List<TypeParam> list;
     list.push_back(this->create());
     list.push_back(this->create());
@@ -153,7 +155,7 @@ TYPED_TEST(ListTest, const_iterators_work) {
     ASSERT_EQ(it, const_list.end());
 }
 
-TYPED_TEST(ListTest, can_swap_lists) {
+TYPED_TEST(ListTest, can_swap) {
     containers::List<TypeParam> list1;
     auto obj1 = this->create();
     list1.push_back(obj1);
@@ -173,7 +175,7 @@ TYPED_TEST(ListTest, can_swap_lists) {
 
 }
 
-TYPED_TEST(ListTest, sort_works_on_empty_list) {
+TYPED_TEST(ListTest, sort_works_on_empty) {
     containers::List<TypeParam> list;
     ASSERT_NO_THROW(list.sort());
     ASSERT_TRUE(list.empty());
@@ -189,7 +191,7 @@ TYPED_TEST(ListTest, sort_works_on_single_element) {
     ASSERT_EQ(list.front(), obj);
 }
 
-TYPED_TEST(ListTest, sort_works_on_sorted_list) {
+TYPED_TEST(ListTest, sort_works_on_sorted) {
     auto seq = this->create_sequence(50);
     containers::List<TypeParam> list;
     std::copy(seq.begin(), seq.end(), std::back_inserter(list));
@@ -200,7 +202,7 @@ TYPED_TEST(ListTest, sort_works_on_sorted_list) {
     ASSERT_EQ(list.size(), 50);
 }
 
-TYPED_TEST(ListTest, merge_works_on_empty_lists) {
+TYPED_TEST(ListTest, merge_works_on_empty) {
     containers::List<TypeParam> list1;
     containers::List<TypeParam> list2;
 
@@ -239,7 +241,7 @@ TYPED_TEST(ListTest, merge_works_when_second_is_empty) {
     ASSERT_TRUE(std::is_sorted(list1.begin(), list1.end()));
 }
 
-TYPED_TEST(ListTest, merge_combines_two_sorted_lists) {
+TYPED_TEST(ListTest, merge_combines_two_sorted) {
     containers::List<TypeParam> list1;
     containers::List<TypeParam> list2;
 
@@ -280,4 +282,6 @@ TYPED_TEST(ListTest, merge_preserves_total_elements_count) {
     EXPECT_EQ(list1.size(), n1 + n2);
     EXPECT_TRUE(list2.empty());
     EXPECT_TRUE(std::is_sorted(list1.begin(), list1.end()));
+}
+
 }

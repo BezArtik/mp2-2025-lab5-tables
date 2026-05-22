@@ -48,7 +48,11 @@ public:
 
     iterator erase(const key_type& key) {
         auto it = find(key);
-        if (it != end()) return erase(it);
+        if (it != end()) {
+            std::swap(*it, data_.back());
+            data_.pop_back();
+            return it;
+        }
         return end();
     }
 
@@ -56,6 +60,7 @@ public:
         data_.reserve(new_cap);
     }
 
+	std::string type_name() const noexcept { return "UnsortedArrayTable"; }
     size_type op_count() const noexcept { return count_; }
     void reset_op_count() noexcept { count_ = 0; }
     bool empty() const noexcept { return data_.empty(); }

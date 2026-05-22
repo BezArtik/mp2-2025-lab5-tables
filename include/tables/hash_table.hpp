@@ -23,7 +23,7 @@ public:
     using pointer = value_type*;
     using const_pointer = const value_type*;
 
-    HashTable(size_type init_capacity = 16)
+    HashTable(size_type init_capacity = 512)
         : buckets_(next_prime(init_capacity))
         , size_(0)
         , seed_(std::random_device{}()) {}
@@ -32,7 +32,7 @@ public:
     public:
         using iterator_category = std::forward_iterator_tag;
         using value_type = HashTable::value_type;
-        using difference_type = ptrdiff_t;
+        using difference_type = HashTable::difference_type;
         using pointer = value_type*;
         using reference = value_type&;
 
@@ -81,13 +81,14 @@ public:
         HashTable* table_;
         size_type index_;
         friend class HashTable;
+        friend class ConstIterator;
     };
 
     class ConstIterator {
     public:
         using iterator_category = std::forward_iterator_tag;
         using value_type = const HashTable::value_type;
-        using difference_type = ptrdiff_t;
+        using difference_type = HashTable::difference_type;
         using pointer = const value_type*;
         using reference = const value_type&;
         
@@ -164,7 +165,7 @@ public:
             return end();
         }
 
-        size_type current_index = pos.index_;
+        const auto current_index = pos.index_;
 
         if (buckets_[current_index].is_occupied()) {
             buckets_[current_index].set_deleted();
@@ -179,7 +180,7 @@ public:
             return end();
         }
 
-        size_type current_index = pos.index_;
+        const auto current_index = pos.index_;
 
         if (buckets_[current_index].is_occupied()) {
             buckets_[current_index].set_deleted();
@@ -212,6 +213,7 @@ public:
         }
     }
 
+	std::string type_name() const noexcept { return "HashTable"; }
     float load_factor() const noexcept {
         return static_cast<float>(size_) / static_cast<float>(buckets_.size());
     }
@@ -304,7 +306,7 @@ private:
     std::optional<size_type> find_pos(const key_type& key) const noexcept {
         if (buckets_.empty()) return std::nullopt;
         size_type attempt = 0;
-        size_type pos = hash(key, attempt);
+        auto pos = hash(key, attempt);
 
         while (attempt < buckets_.size()) {
             ++count_;
@@ -348,15 +350,15 @@ private:
         }
 
         size_type attempt = 0;
-        size_type pos = hash(key, attempt);
-        size_type first_del = buckets_.size();
+        auto pos = hash(key, attempt);
+        auto first_del = buckets_.size();
 
         while (attempt < buckets_.size()) {
             ++count_;
             const auto& bucket = buckets_[pos];
 
             if (bucket.is_empty()) {
-                size_type insert_pos = (first_del < buckets_.size()) ? first_del : pos;
+                auto insert_pos = (first_del < buckets_.size()) ? first_del : pos;
                 buckets_[insert_pos] = Bucket(std::forward<K>(key), std::forward<V>(value));
                 ++size_;
                 return { iterator(this, insert_pos), true };

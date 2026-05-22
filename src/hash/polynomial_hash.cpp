@@ -1,6 +1,6 @@
-#include "polynomial/core/polynomial.hpp"
-#include "polynomial/hash/polynomial_hash.hpp"
-#include "polynomial/hash/monomial_hash.hpp"
+#include "polynomial/polynomial.hpp"
+#include "hash/polynomial_hash.hpp"
+#include "hash/monomial_hash.hpp"
 
 namespace polynomial {
 

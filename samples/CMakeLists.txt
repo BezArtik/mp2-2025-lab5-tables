@@ -5,7 +5,7 @@ function(add_sample sample_name source_dir source_file)
         PRIVATE
             containers
             tables
-            project_compiled  
+            polynomial_lib  
     )
     
     target_compile_features(${sample_name} PRIVATE cxx_std_20)
@@ -17,8 +17,8 @@ function(add_sample sample_name source_dir source_file)
 endfunction()
 
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/polynomial/sample_polynomial.cpp)
-    add_sample(polynomial_sample polynomial sample_polynomial.cpp)
+    add_sample(sample_polynomial polynomial sample_polynomial.cpp)
 endif()
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/benchmark/sample_benchmark.cpp)
-    add_sample(benchmark_sample benchmark sample_benchmark.cpp)
+    add_sample(sample_benchmark benchmark sample_benchmark.cpp)
 endif()

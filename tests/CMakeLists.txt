@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5...3.30)
 
 include(FetchContent)
 set(BUILD_GMOCK ON CACHE BOOL "Build GMock" FORCE)
@@ -37,18 +37,9 @@ target_link_libraries(tests
 )
 
 target_include_directories(tests PRIVATE 
-    ${CMAKE_SOURCE_DIR}/include/
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
 )
-
-if(WIN32)
-    target_compile_options(tests PRIVATE /bigobj)
-    target_compile_options(tests PRIVATE /W0)
-else()
-    target_compile_options(tests PRIVATE -Wall -Wextra -pthread)
-    target_link_libraries(tests PRIVATE pthread)
-endif()
 
 include(GoogleTest)
 gtest_discover_tests(tests)

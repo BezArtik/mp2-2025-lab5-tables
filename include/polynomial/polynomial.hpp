@@ -1,6 +1,6 @@
 #pragma once
 #include "containers/sorted_list.hpp"
-#include "polynomial/core/monomial.hpp"
+#include "polynomial/monomial.hpp"
 
 namespace polynomial {
 
@@ -17,15 +17,10 @@ public:
     Polynomial(const std::string& str);
 
     Polynomial& operator+=(const Monomial& rhs);
-    Polynomial& operator+=(Monomial&& rhs);
     Polynomial& operator-=(const Monomial& rhs);
-    Polynomial& operator-=(Monomial&& rhs);
     Polynomial& operator+=(const Polynomial& rhs);
     Polynomial& operator-=(const Polynomial& rhs);
     Polynomial& operator*=(const Polynomial& rhs);
-    Polynomial& operator+=(Polynomial&& rhs);
-    Polynomial& operator-=(Polynomial&& rhs);
-    Polynomial& operator*=(Polynomial&& rhs);
     Polynomial& operator*=(double scalar) noexcept;
     Polynomial& operator*=(const Monomial& rhs);
 
@@ -56,15 +51,11 @@ Polynomial::Polynomial(Iter monoms_begin, Iter monoms_end)
 }
 
 Polynomial operator+(Polynomial lhs, const Polynomial& rhs);
-Polynomial operator+(Polynomial lhs, Polynomial&& rhs);
 Polynomial operator-(Polynomial lhs, const Polynomial& rhs);
-Polynomial operator-(Polynomial lhs, Polynomial&& rhs);
 Polynomial operator*(Polynomial lhs, double scalar) noexcept;
 Polynomial operator*(double scalar, Polynomial rhs) noexcept;
 Polynomial operator*(Polynomial lhs, const Monomial& rhs);
-Polynomial operator*(Polynomial lhs, Monomial&& rhs);
 Polynomial operator*(Monomial lhs, const Polynomial& rhs);
-Polynomial operator*(Monomial lhs, Polynomial&& rhs);
 Polynomial operator*(Polynomial lhs, const Polynomial& rhs);
 
 bool operator==(const Polynomial& lhs, const Polynomial& rhs) noexcept;

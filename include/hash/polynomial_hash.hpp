@@ -1,5 +1,5 @@
 #pragma once
-#include "polynomial/core/polynomial.hpp"
+#include "polynomial/polynomial.hpp"
 #include <type_traits>
 
 namespace polynomial {

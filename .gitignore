@@ -5,8 +5,6 @@
 
 /out
 samples/benchmark
-include/containers/skip_list.hpp
-/build_linux
 
 # User-specific files
 *.rsuser

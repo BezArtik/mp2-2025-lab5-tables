@@ -1,5 +1,5 @@
-#include "polynomial/core/monomial.hpp"
-#include "polynomial/hash/monomial_hash.hpp"
+#include "polynomial/monomial.hpp"
+#include "hash/monomial_hash.hpp"
 #include <type_traits>
 #include <cstdint>
 

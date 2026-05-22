@@ -19,11 +19,11 @@ public:
 	bool empty() const noexcept { return stack_.empty(); }
 	size_type size() const noexcept { return stack_.size(); }
 	void push(const_reference data) { stack_.push_back(data); }
-	void push(T&& data) { stack_.push_back(std::move(data)); }
+	void push(value_type&& data) { stack_.push_back(std::move(data)); }
 	void pop() noexcept { stack_.pop_back(); }
 	void clear() noexcept { stack_.clear(); }
 private:
-	Vector<T> stack_;
+	Vector<value_type> stack_;
 };
 
 }
