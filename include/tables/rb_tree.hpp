@@ -3,6 +3,7 @@
 #include <optional>
 #include <utility>
 #include <limits>
+#include <concepts>
 
 namespace tables {
 
@@ -10,7 +11,8 @@ template <typename Key,
     typename T,
     typename Compare = std::less<Key>>
 class RBTreeTable {
-struct Node;
+    struct Node;
+	using node_ptr = Node*;
 public:
     using key_type = Key;
     using mapped_type = T;
@@ -24,11 +26,6 @@ public:
     using key_compare = Compare;
 
     RBTreeTable() { init_nil(); }
-
-    RBTreeTable(const key_compare& comp)
-        : comp_(comp) {
-        init_nil();
-    }
 
     ~RBTreeTable() {
         clear();
@@ -46,26 +43,19 @@ public:
     }
 
     RBTreeTable& operator=(const RBTreeTable& other) {
-        if (this == &other) return *this;
         RBTreeTable tmp(other);
         swap(tmp);
         return *this;
     }
 
     RBTreeTable(RBTreeTable&& other) noexcept
-        : root_(other.root_)
-        , nil_(other.nil_)
-        , comp_(std::move(other.comp_))
-        , size_(other.size_)
-        , count_(other.count_) {
-        other.root_ = nullptr;
-        other.nil_ = nullptr;
-        other.size_ = 0;
-        other.count_ = 0;
-    }
+        : root_(std::exchange(other.root_, nullptr)),
+        nil_(std::exchange(other.nil_, nullptr)),
+        comp_(std::move(other.comp_)),
+        size_(std::exchange(other.size_, 0)),
+        count_(std::exchange(other.count_, 0)) {}
 
     RBTreeTable& operator=(RBTreeTable&& other) noexcept {
-        if (this == &other) return *this;
         RBTreeTable tmp(std::move(other));
         swap(tmp);
         return *this;
@@ -80,36 +70,44 @@ public:
         swap(count_, other.count_);
     }
 
-    class Iterator {
+	template <typename U>
+    class RBIterator {
     public:
         using iterator_category = std::forward_iterator_tag;
-        using value_type = typename RBTreeTable::value_type;
-        using difference_type = typename RBTreeTable::difference_type;
+        using value_type = U;
+        using difference_type = ptrdiff_t;
         using pointer = value_type*;
         using reference = value_type&;
+		using node_ptr = std::conditional_t<std::is_const_v<U>, const Node*, Node*>;
 
-        Iterator(Node* node = nullptr, Node* nil = nullptr)
+        RBIterator(node_ptr node = nullptr, node_ptr nil = nullptr)
             : node_(node), nil_(nil) {
         }
+
+		template <typename V>
+		requires std::same_as<std::remove_const_t<U>, std::remove_const_t<V>>
+		RBIterator(const RBIterator<V>& other) noexcept
+			: node_(other.node_), nil_(other.nil_) {
+		}
 
         reference operator*() const noexcept { return node_->data_; }
         pointer operator->() const noexcept { return &(node_->data_); }
 
-        bool operator==(const Iterator& other) const noexcept {
+        bool operator==(const RBIterator& other) const noexcept {
             return node_ == other.node_;
         }
 
-        bool operator!=(const Iterator& other) const noexcept {
+        bool operator!=(const RBIterator& other) const noexcept {
             return node_ != other.node_;
         }
 
-        Iterator& operator++() noexcept {
+        RBIterator& operator++() noexcept {
             if (node_ == nil_) return *this;
 
             if (node_->right_ != nil_) {
                 node_ = min(node_->right_);
             } else {
-                Node* parent = node_->parent_;
+                node_ptr parent = node_->parent_;
                 while (parent != nil_ && node_ == parent->right_) {
                     node_ = parent;
                     parent = parent->parent_;
@@ -119,90 +117,29 @@ public:
             return *this;
         }
 
-        Iterator operator++(int) noexcept {
-            Iterator tmp = *this;
+        RBIterator operator++(int) noexcept {
+            RBIterator tmp = *this;
             ++(*this);
             return tmp;
         }
 
     private:
-        Node* node_;
-        Node* nil_;
+        node_ptr node_;
+        node_ptr nil_;
 
-        Node* min(Node* node) noexcept {
+        node_ptr min(node_ptr node) noexcept {
             while (node->left_ != nil_) {
                 node = node->left_;
             }
             return node;
         }
-        friend class RBTreeTable;
+        friend class RBTreeTable<Key, T, Compare>;
+        template <typename V>
         friend class ConstIterator;
     };
 
-    class ConstIterator {
-    public:
-        using iterator_category = std::forward_iterator_tag;
-        using value_type = const typename RBTreeTable::value_type;
-        using difference_type = typename RBTreeTable::difference_type;
-        using pointer = value_type*;
-        using reference = value_type&;
-
-        ConstIterator(const Node* node = nullptr, const Node* nil = nullptr)
-            : node_(node), nil_(nil) {
-        }
-
-        ConstIterator(const Iterator& it)
-            : node_(it.node_), nil_(it.nil_) {
-        }
-
-        reference operator*() const noexcept { return node_->data_; }
-        pointer operator->() const noexcept { return &(node_->data_); }
-
-        bool operator==(const ConstIterator& other) const noexcept {
-            return node_ == other.node_;
-        }
-
-        bool operator!=(const ConstIterator& other) const noexcept {
-            return node_ != other.node_;
-        }
-
-        ConstIterator& operator++() noexcept {
-            if (node_ == nil_) return *this;
-
-            if (node_->right_ != nil_) {
-                node_ = min(node_->right_);
-            } else {
-                const Node* parent = node_->parent_;
-                while (parent != nil_ && node_ == parent->right_) {
-                    node_ = parent;
-                    parent = parent->parent_;
-                }
-                node_ = parent;
-            }
-            return *this;
-        }
-
-        ConstIterator operator++(int) noexcept {
-            ConstIterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-
-    private:
-        const Node* node_;
-        const Node* nil_;
-
-        const Node* min(const Node* node) const noexcept {
-            while (node->left_ != nil_) {
-                node = node->left_;
-            }
-            return node;
-        }
-        friend class RBTreeTable;
-    };
-
-    using iterator = Iterator;
-    using const_iterator = ConstIterator;
+    using iterator = RBIterator<value_type>;
+    using const_iterator = RBIterator<const value_type>;
 
     std::pair<iterator, bool> insert(const value_type& value) {
         return insert_impl(value.first, value.second);
@@ -257,9 +194,9 @@ private:
 
     struct Node {
         value_type data_;
-        Node* left_;
-        Node* right_;
-        Node* parent_;
+        node_ptr left_;
+        node_ptr right_;
+        node_ptr parent_;
         Color color_;
 
         template<typename K, typename V>
@@ -279,44 +216,44 @@ private:
             return parent_ && this == parent_->right_;
         }
 
-        Node* grandparent() const noexcept {
+        node_ptr grandparent() const noexcept {
             return parent_ ? parent_->parent_ : nullptr;
         }
 
-        Node* uncle() const noexcept {
-            Node* gp = grandparent();
+        node_ptr uncle() const noexcept {
+            auto gp = grandparent();
             if (!gp) return nullptr;
             return parent_->is_left_child() ? gp->right_ : gp->left_;
         }
 
-        Node* sibling() const noexcept {
+        node_ptr sibling() const noexcept {
             if (!parent_) return nullptr;
             return is_left_child() ? parent_->right_ : parent_->left_;
         }
     };
 
-    static bool is_red(Node* node) noexcept {
+    static bool is_red(node_ptr node) noexcept {
         return node && node->color_ == Color::RED;
     }
 
-    static bool is_black(Node* node) noexcept {
+    static bool is_black(node_ptr node) noexcept {
         return !node || node->color_ == Color::BLACK;
     }
 
-    static void set_red(Node* node) noexcept {
+    static void set_red(node_ptr node) noexcept {
         if (node) node->color_ = Color::RED;
     }
 
-    static void set_black(Node* node) noexcept {
+    static void set_black(node_ptr node) noexcept {
         if (node) node->color_ = Color::BLACK;
     }
 
-    static void set_color(Node* node, Color color) noexcept {
+    static void set_color(node_ptr node, Color color) noexcept {
         if (node) node->color_ = color;
     }
 
-    Node* root_ = nullptr;
-    Node* nil_ = nullptr;
+    node_ptr root_ = nullptr;
+    node_ptr nil_ = nullptr;
     key_compare comp_{};
     size_type size_ = 0;
     mutable size_type count_ = 0;
@@ -329,18 +266,18 @@ private:
         root_ = nil_;
     }
 
-    bool is_nil(Node* node) const noexcept { return node == nil_; }
+    bool is_nil(node_ptr node) const noexcept { return node == nil_; }
 
     template<typename K, typename V>
-    Node* create_node(K&& key, V&& value, Color color = Color::RED) {
-        Node* node = new Node(std::forward<K>(key), std::forward<V>(value), color);
+    node_ptr create_node(K&& key, V&& value, Color color = Color::RED) {
+        auto node = new Node(std::forward<K>(key), std::forward<V>(value), color);
         node->left_ = nil_;
         node->right_ = nil_;
         node->parent_ = nil_;
         return node;
     }
 
-    Node* min(Node* node) const noexcept {
+    node_ptr min(node_ptr node) const noexcept {
         if (is_nil(node)) return node;
         while (!is_nil(node->left_)) {
             ++count_;
@@ -349,9 +286,9 @@ private:
         return node;
     }
 
-    void left_rotate(Node* x) noexcept {
+    void left_rotate(node_ptr x) noexcept {
         ++count_;
-        Node* y = x->right_;
+        auto y = x->right_;
 
         x->right_ = y->left_;
         if (!is_nil(y->left_)) y->left_->parent_ = x;
@@ -366,9 +303,9 @@ private:
         x->parent_ = y;
     }
 
-    void right_rotate(Node* y) noexcept {
+    void right_rotate(node_ptr y) noexcept {
         ++count_;
-        Node* x = y->left_;
+        auto x = y->left_;
 
         y->left_ = x->right_;
         if (!is_nil(x->right_)) x->right_->parent_ = y;
@@ -383,11 +320,11 @@ private:
         y->parent_ = x;
     }
 
-    void insert_fix(Node* z) noexcept {
+    void insert_fix(node_ptr z) noexcept {
         while (is_red(z->parent_)) {
             ++count_;
             if (z->parent_ == z->grandparent()->left_) {
-                Node* y = z->grandparent()->right_;
+                auto y = z->grandparent()->right_;
 
                 if (is_red(y)) {
                     set_black(z->parent_);
@@ -404,7 +341,7 @@ private:
                     right_rotate(z->grandparent());
                 }
             } else {
-                Node* y = z->grandparent()->left_;
+                auto y = z->grandparent()->left_;
 
                 if (is_red(y)) {
                     set_black(z->parent_);
@@ -425,11 +362,11 @@ private:
         set_black(root_);
     }
 
-    void remove_fix(Node* x) noexcept {
+    void remove_fix(node_ptr x) noexcept {
         while (x != root_ && is_black(x)) {
             ++count_;
             if (x == x->parent_->left_) {
-                Node* w = x->parent_->right_;
+                auto w = x->parent_->right_;
 
                 if (is_red(w)) {
                     set_black(w);
@@ -455,7 +392,7 @@ private:
                     x = root_;
                 }
             } else {
-                Node* w = x->parent_->left_;
+                auto w = x->parent_->left_;
 
                 if (is_red(w)) {
                     set_black(w);
@@ -485,7 +422,7 @@ private:
         set_black(x);
     }
 
-    void transplant(Node* u, Node* v) noexcept {
+    void transplant(node_ptr u, node_ptr v) noexcept {
         ++count_;
         if (is_nil(u->parent_)) root_ = v;
         else if (u == u->parent_->left_) u->parent_->left_ = v;
@@ -494,13 +431,13 @@ private:
         v->parent_ = u->parent_;
     }
 
-    void erase_node(Node* z) noexcept {
+    void erase_node(node_ptr z) noexcept {
         ++count_;
         if (is_nil(z)) return;
 
-        Node* y = z;
-        Node* x;
-        Color y_original_color = y->color_;
+        auto y = z;
+        node_ptr x;
+        auto y_original_color = y->color_;
 
         if (is_nil(z->left_)) {
             x = z->right_;
@@ -536,8 +473,8 @@ private:
     }
 
     template <typename Iter>
-    Iter find_impl(Node* begin, Node* end, const key_type& key) const noexcept {
-        Node* curr = begin;
+    Iter find_impl(node_ptr begin, node_ptr end, const key_type& key) const noexcept {
+        auto curr = begin;
         while (curr != end) {
             ++count_;
             if (comp_(key, curr->data_.first)) {
@@ -554,8 +491,8 @@ private:
     template <typename Iter>
     Iter erase_impl(Iter pos) noexcept {
         if (pos == end()) return end();
-        Node* node = pos.node_;
-        Iter next = pos;
+        auto node = pos.node_;
+        auto next = pos;
         ++next;
         erase_node(node);
         return next;
@@ -563,8 +500,8 @@ private:
 
     template <typename K, typename V>
     std::pair<iterator, bool> insert_impl(K&& key, V&& value) {
-        Node* parent = nil_;
-        Node* curr = root_;
+        auto parent = nil_;
+        auto curr = root_;
 
         while (!is_nil(curr)) {
             ++count_;
@@ -580,7 +517,7 @@ private:
             }
         }
 
-        Node* new_node = create_node(
+        auto new_node = create_node(
             std::forward<K>(key),
             std::forward<V>(value)
         );
@@ -599,10 +536,10 @@ private:
         return { iterator(new_node, nil_), true };
     }
 
-    Node* copy_subtree(Node* other_node, Node* other_nil, Node* my_nil) {
+    node_ptr copy_subtree(node_ptr other_node, node_ptr other_nil, node_ptr my_nil) {
         if (other_node == other_nil) return my_nil;
 
-        Node* new_node = create_node(
+        auto new_node = create_node(
             other_node->data_.first,
             other_node->data_.second,
             other_node->color_
@@ -617,7 +554,7 @@ private:
         return new_node;
     }
 
-    void clear_impl(Node* node) noexcept {
+    void clear_impl(node_ptr node) noexcept {
         if (is_nil(node)) return;
         clear_impl(node->left_);
         clear_impl(node->right_);

@@ -225,10 +225,6 @@ Monomial operator*(Monomial lhs, const Monomial& rhs) {
     return lhs *= rhs;
 }
 
-Monomial operator*(Monomial lhs, Monomial&& rhs) {
-    return lhs *= std::move(rhs);
-}
-
 bool operator==(const Monomial& lhs, const Monomial& rhs) noexcept {
     return Monomial::is_zero(lhs.coefficient() - rhs.coefficient()) && lhs.is_similar(rhs);
 }

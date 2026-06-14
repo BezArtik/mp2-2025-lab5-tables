@@ -3,6 +3,7 @@
 #include <optional>
 #include <limits>
 #include <random>
+#include <concepts>
 
 namespace tables {
 
@@ -28,21 +29,27 @@ public:
         , size_(0)
         , seed_(std::random_device{}()) {}
 
-    class Iterator {
+    template <typename U>
+    class HashIterator {
     public:
         using iterator_category = std::forward_iterator_tag;
-        using value_type = HashTable::value_type;
-        using difference_type = HashTable::difference_type;
+        using value_type = U;
+        using difference_type = ptrdiff_t;
         using pointer = value_type*;
         using reference = value_type&;
+		using hash_ptr = std::conditional_t<std::is_const_v<U>, const HashTable*, HashTable*>;
 
-        Iterator(HashTable* ptr = nullptr, size_type index = 0)
+        HashIterator(hash_ptr ptr = nullptr, size_type index = 0)
             : table_(ptr), index_(index) {
             if (table_ && index_ < table_->buckets_.size() &&
                 !table_->buckets_[index_].is_occupied()) {
                 skip();
             }
         }
+
+        template <typename V>
+		requires std::same_as<std::remove_const_t<V>, std::remove_const_t<U>>
+		HashIterator(const HashIterator<V>& other) : table_(other.table_), index_(other.index_) {}
 
         reference operator*() const noexcept {
             return table_->buckets_[index_].value_;
@@ -51,21 +58,21 @@ public:
             return &table_->buckets_[index_].value_;
         }
 
-        Iterator& operator++() noexcept {
+        HashIterator& operator++() noexcept {
             ++index_;
             skip();
             return *this;
         }
-        Iterator operator++(int) noexcept {
-            Iterator tmp = *this;
+        HashIterator operator++(int) noexcept {
+            HashIterator tmp = *this;
             ++(*this);
             return tmp;
         }
 
-        bool operator==(const Iterator& other) const noexcept {
+        bool operator==(const HashIterator& other) const noexcept {
             return table_ == other.table_ && index_ == other.index_;
         }
-        bool operator!=(const Iterator& other) const noexcept {
+        bool operator!=(const HashIterator& other) const noexcept {
             return !(*this == other);
         }
         
@@ -78,69 +85,16 @@ public:
             }
         }
 
-        HashTable* table_;
+        hash_ptr table_;
         size_type index_;
-        friend class HashTable;
-        friend class ConstIterator;
+
+        friend class HashTable<Key, T, Hasher, Equal>;
+		template <typename V>
+		friend class HashIterator;
     };
 
-    class ConstIterator {
-    public:
-        using iterator_category = std::forward_iterator_tag;
-        using value_type = const HashTable::value_type;
-        using difference_type = HashTable::difference_type;
-        using pointer = const value_type*;
-        using reference = const value_type&;
-        
-        ConstIterator(const HashTable* ptr = nullptr, size_type index = 0)
-            : table_(ptr), index_(index) {
-            if (table_ && index_ < table_->buckets_.size() &&
-                !table_->buckets_[index_].is_occupied()) {
-                skip();
-            }
-        }
-
-        ConstIterator(const Iterator& it) : table_(it.table_), index_(it.index_) {}
-
-        reference operator*() const noexcept {
-            return table_->buckets_[index_].value_;
-        }
-        pointer operator->() const noexcept {
-            return &table_->buckets_[index_].value_;
-        }
-
-        ConstIterator& operator++() noexcept {
-            ++index_;
-            skip();
-            return *this;
-        }
-        ConstIterator operator++(int) noexcept {
-            ConstIterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-
-        bool operator==(const ConstIterator& other) const noexcept {
-            return table_ == other.table_ && index_ == other.index_;
-        }
-        bool operator!=(const ConstIterator& other) const noexcept {
-            return !(*this == other);
-        }
-
-    private:
-        void skip() noexcept {
-            while (index_ < table_->buckets_.size() &&
-                !table_->buckets_[index_].is_occupied()) {
-                ++index_;
-            }
-        }
-        const HashTable* table_;
-        size_type index_;
-        friend class HashTable;
-    };
-
-    using iterator = Iterator;
-    using const_iterator = ConstIterator;
+    using iterator = HashIterator<value_type>;
+    using const_iterator = HashIterator<const value_type>;
 
     std::pair<iterator, bool> insert(const value_type& value) {
         return insert_impl(value.first, value.second);

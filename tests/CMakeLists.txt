@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.5...3.30)
 
 include(FetchContent)
-set(BUILD_GMOCK ON CACHE BOOL "Build GMock" FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "Disable install" FORCE)
 set(gtest_force_shared_crt ON CACHE BOOL "Force shared CRT" FORCE)
 FetchContent_Declare(
@@ -14,7 +13,6 @@ FetchContent_MakeAvailable(GoogleTest)
 add_executable(tests)
 
 target_sources(tests PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_containers/test_list.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_containers/test_sorted_list.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_containers/test_vector.cpp
@@ -33,7 +31,6 @@ target_link_libraries(tests
     containers
     tables
 	GTest::gtest_main
-	GTest::gmock
 )
 
 target_include_directories(tests PRIVATE 

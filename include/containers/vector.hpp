@@ -7,98 +7,67 @@
 #include <memory>
 #include <iterator>
 #include <cstddef>
+#include <concepts>
 
 namespace containers {
 
 template<typename T>
 class Vector {
 public:
-    using value_type = T;
-    using size_type = size_t;
+    using value_type      = T;
+    using size_type       = size_t;
     using difference_type = ptrdiff_t;
-    using reference = T&;
+    using reference       = T&;
     using const_reference = const T&;
-    using pointer = T*;
-    using const_pointer = const T*;
+    using pointer         = T*;
+    using const_pointer   = const T*;
 
-    class Iterator {
+    template <typename U>
+    class VectorIterator {
     public:
         using iterator_category = std::random_access_iterator_tag;
-        using value_type = T;
-        using difference_type = ptrdiff_t;
-        using pointer = T*;
-        using reference = T&;
+        using value_type        = U;
+        using difference_type   = ptrdiff_t;
+        using pointer           = value_type*;
+        using reference         = value_type&;
 
-        Iterator() = default;
-        Iterator(pointer ptr = nullptr) noexcept : ptr_(ptr) {}
+        VectorIterator() noexcept = default;
+        VectorIterator(pointer ptr = nullptr) noexcept : ptr_(ptr) {}
+        template <typename V>
+            requires std::same_as<std::remove_const_t<U>, std::remove_const_t<V>>
+        VectorIterator(const VectorIterator<V>& other) noexcept : ptr_(other.ptr_) {}
 
         reference operator*() const noexcept { return *ptr_; }
         pointer operator->() const noexcept { return ptr_; }
         reference operator[](difference_type n) const noexcept { return ptr_[n]; }
-        Iterator& operator++() noexcept { ++ptr_; return *this; }
-        Iterator operator++(int) noexcept { Iterator temp = *this; ++ptr_; return temp; }
-        Iterator& operator--() noexcept { --ptr_; return *this; }
-        Iterator operator--(int) noexcept { Iterator temp = *this; --ptr_; return temp; }
-        Iterator operator+(difference_type n) const noexcept { return Iterator(ptr_ + n); }
-        Iterator operator-(difference_type n) const noexcept { return Iterator(ptr_ - n); }
-        Iterator& operator+=(difference_type n) noexcept { ptr_ += n; return *this; }
-        Iterator& operator-=(difference_type n) noexcept { ptr_ -= n; return *this; }
-        difference_type operator-(const Iterator& other) const noexcept { return ptr_ - other.ptr_; }
+        VectorIterator& operator++() noexcept { ++ptr_; return *this; }
+        VectorIterator operator++(int) noexcept { VectorIterator temp = *this; ++ptr_; return temp; }
+        VectorIterator& operator--() noexcept { --ptr_; return *this; }
+        VectorIterator operator--(int) noexcept { VectorIterator temp = *this; --ptr_; return temp; }
+        VectorIterator operator+(difference_type n) const noexcept { return VectorIterator(ptr_ + n); }
+        VectorIterator operator-(difference_type n) const noexcept { return VectorIterator(ptr_ - n); }
+        VectorIterator& operator+=(difference_type n) noexcept { ptr_ += n; return *this; }
+        VectorIterator& operator-=(difference_type n) noexcept { ptr_ -= n; return *this; }
+        difference_type operator-(const VectorIterator& other) const noexcept { return ptr_ - other.ptr_; }
 
-        bool operator==(const Iterator& other) const noexcept { return ptr_ == other.ptr_; }
-        bool operator!=(const Iterator& other) const noexcept { return ptr_ != other.ptr_; }
-        bool operator<(const Iterator& other) const noexcept { return ptr_ < other.ptr_; }
-        bool operator<=(const Iterator& other) const noexcept { return ptr_ <= other.ptr_; }
-        bool operator>(const Iterator& other) const noexcept { return ptr_ > other.ptr_; }
-        bool operator>=(const Iterator& other) const noexcept { return ptr_ >= other.ptr_; }
-
-    private:
-        pointer ptr_{ nullptr };
-        friend class Vector;
-        friend class ConstIterator;
-    };
-
-    class ConstIterator {
-    public:
-        using iterator_category = std::random_access_iterator_tag;
-        using value_type = const T;
-        using difference_type = ptrdiff_t;
-        using pointer = const T*;
-        using reference = const T&;
-
-        ConstIterator() = default;
-        ConstIterator(pointer ptr = nullptr) noexcept : ptr_(ptr) {}
-        ConstIterator(const Iterator& it) noexcept : ptr_(it.ptr_) {}
-
-        reference operator*() const noexcept { return *ptr_; }
-        pointer operator->() const noexcept { return ptr_; }
-        reference operator[](difference_type n) const noexcept { return ptr_[n]; }
-        ConstIterator& operator++() noexcept { ++ptr_; return *this; }
-        ConstIterator operator++(int) noexcept { ConstIterator temp = *this; ++ptr_; return temp; }
-        ConstIterator& operator--() noexcept { --ptr_; return *this; }
-        ConstIterator operator--(int) noexcept { ConstIterator temp = *this; --ptr_; return temp; }
-        ConstIterator operator+(difference_type n) const noexcept { return ConstIterator(ptr_ + n); }
-        ConstIterator operator-(difference_type n) const noexcept { return ConstIterator(ptr_ - n); }
-        ConstIterator& operator+=(difference_type n) noexcept { ptr_ += n; return *this; }
-        ConstIterator& operator-=(difference_type n) noexcept { ptr_ -= n; return *this; }
-        difference_type operator-(const ConstIterator& other) const noexcept { return ptr_ - other.ptr_; }
-
-        bool operator==(const ConstIterator& other) const noexcept { return ptr_ == other.ptr_; }
-        bool operator!=(const ConstIterator& other) const noexcept { return ptr_ != other.ptr_; }
-        bool operator<(const ConstIterator& other) const noexcept { return ptr_ < other.ptr_; }
-        bool operator<=(const ConstIterator& other) const noexcept { return ptr_ <= other.ptr_; }
-        bool operator>(const ConstIterator& other) const noexcept { return ptr_ > other.ptr_; }
-        bool operator>=(const ConstIterator& other) const noexcept { return ptr_ >= other.ptr_; }
+        bool operator==(const VectorIterator& other) const noexcept { return ptr_ == other.ptr_; }
+        bool operator!=(const VectorIterator& other) const noexcept { return ptr_ != other.ptr_; }
+        bool operator<(const VectorIterator& other) const noexcept { return ptr_ < other.ptr_; }
+        bool operator<=(const VectorIterator& other) const noexcept { return ptr_ <= other.ptr_; }
+        bool operator>(const VectorIterator& other) const noexcept { return ptr_ > other.ptr_; }
+        bool operator>=(const VectorIterator& other) const noexcept { return ptr_ >= other.ptr_; }
 
     private:
         pointer ptr_{ nullptr };
-        friend class Vector;
+        friend class Vector<T>;
+        template<typename V>
+        friend class VectorIterator;
     };
 
-    using iterator = Iterator;
-    using const_iterator = ConstIterator;
+    using iterator        = VectorIterator<value_type>;
+    using const_iterator  = VectorIterator<const value_type>;
 
-    Vector() = default;
+    Vector() noexcept = default;
 
     Vector(size_type n) {
         allocate_and_init(n, [](pointer p, size_type n) {
@@ -140,14 +109,12 @@ public:
     }
 
     Vector& operator=(const Vector& other) {
-        if (this == &other) return *this;
         Vector tmp(other);
         swap(tmp);
         return *this;
     }
 
     Vector& operator=(Vector&& other) noexcept {
-        if (this == &other) return *this;
         Vector tmp(std::move(other));
         swap(tmp);
         return *this;
@@ -217,14 +184,13 @@ public:
     }
 
     template<typename... Args>
-    reference emplace_back(Args&&... args) {
+    void emplace_back(Args&&... args) {
         if (buf_.end_ == buf_.capacity_) {
             reallocate_and_construct_at(size(), std::forward<Args>(args)...);
         } else {
             std::construct_at(buf_.end_, std::forward<Args>(args)...);
             ++buf_.end_;
         }
-        return back();
     }
 
     void push_back(const_reference value) {
@@ -395,12 +361,12 @@ private:
 
     private:
         static pointer allocate(size_type n) {
-            return n != 0 ? static_cast<pointer>(::operator new(n * sizeof(T))) : nullptr;
+            return n != 0 ? static_cast<pointer>(::operator new(n * sizeof(value_type))) : nullptr;
         }
 
         static void deallocate(pointer ptr, size_type n) noexcept {
             if (ptr && n > 0) {
-                ::operator delete(ptr, n * sizeof(T));
+                ::operator delete(ptr, n * sizeof(value_type));
             }
         }
     } buf_{};
@@ -412,7 +378,7 @@ private:
             buf_.allocate_buffer(n);
         }
 
-        ~ScopedBuffer() noexcept {
+        ~ScopedBuffer() {
             buf_.deallocate_buffer();
         }
 

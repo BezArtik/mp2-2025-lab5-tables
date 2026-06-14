@@ -5,8 +5,8 @@
 namespace hash {
 
 size_t MurMurHash::operator()(const std::string& key) const noexcept {
-    const uint64_t m = 0xc6a4a7935bd1e995;
-    const int r = 47;
+    constexpr uint64_t m = 0xc6a4a7935bd1e995;
+    constexpr int r = 47;
     uint64_t h = 0x8445d61a4e774912 ^ (key.size() * m);
     const uint64_t* data = reinterpret_cast<const uint64_t*>(key.data());
     const uint64_t* end = data + (key.size() / 8);

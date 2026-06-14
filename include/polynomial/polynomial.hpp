@@ -6,8 +6,8 @@ namespace polynomial {
 
 class Polynomial {
     using monomials_t = containers::SortedList<Monomial, MonomialCompare>;
-    using iterator = monomials_t::iterator;
-    using const_iterator = monomials_t::const_iterator;
+    using iterator = typename monomials_t::iterator;
+    using const_iterator = typename monomials_t::const_iterator;
 public:
     Polynomial() = default;
     Polynomial(const Monomial& monom);

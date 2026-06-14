@@ -7,6 +7,7 @@
 #include <iterator>
 #include <compare>
 #include <algorithm>
+#include <concepts>
 
 namespace containers {
 
@@ -21,89 +22,61 @@ public:
     using const_reference = const T&;
     using pointer = T*;
     using const_pointer = const T*;
-    
 
-    class Iterator {
+    template <typename U>
+    class ListIterator {
     public:
         using iterator_category = std::bidirectional_iterator_tag;
-        using value_type = T;
+        using value_type = U;
         using difference_type = ptrdiff_t;
-        using pointer = T*;
-        using reference = T&;
+        using pointer = value_type*;
+        using reference = value_type&;
+		using node_ptr = std::conditional_t<std::is_const_v<U>, const Node*, Node*>;
 
-        Iterator() = default;
-        Iterator(Node* node = nullptr) : curr_(node) {}
+        ListIterator() noexcept = default;
+        ListIterator(node_ptr node = nullptr) noexcept : curr_(node) {}
+        template <typename V>
+            requires std::same_as<std::remove_const_t<U>, std::remove_const_t<V>>
+        ListIterator(const ListIterator<V>& other) noexcept : curr_(other.curr_) {}
 
         reference operator*() const noexcept { return curr_->data_; }
         pointer operator->() const noexcept { return &curr_->data_; }
-        Iterator& operator++() noexcept {
+        ListIterator& operator++() noexcept {
             curr_ = curr_->next_;
             return *this;
         }
-        Iterator operator++(int) noexcept {
-            Iterator tmp = *this;
+        ListIterator operator++(int) noexcept {
+            ListIterator tmp = *this;
             ++(*this);
             return tmp;
         }
-        Iterator& operator--() noexcept {
+        ListIterator& operator--() noexcept {
             curr_ = curr_->prev_;
             return *this;
         }
-        Iterator operator--(int) noexcept {
-            Iterator tmp = *this;
+        ListIterator operator--(int) noexcept {
+            ListIterator tmp = *this;
             --(*this);
             return tmp;
         }
-        auto operator<=>(const Iterator& other) const noexcept = default;
+
+        bool operator==(const ListIterator& other) const noexcept { return curr_ == other.curr_; }
+        bool operator!=(const ListIterator& other) const noexcept { return curr_ != other.curr_; }
+        bool operator<(const ListIterator& other) const noexcept { return curr_ < other.curr_; }
+        bool operator<=(const ListIterator& other) const noexcept { return curr_ <= other.curr_; }
+        bool operator>(const ListIterator& other) const noexcept { return curr_ > other.curr_; }
+        bool operator>=(const ListIterator& other) const noexcept { return curr_ >= other.curr_; }
 
     private:
-        Node* curr_;
-        friend class List;
-        friend class ConstIterator;
+        node_ptr curr_;
+
+        friend class List<T>;
+        template<typename V>
+        friend class ListIterator;
     };
 
-    class ConstIterator {
-    public:
-        using iterator_category = std::bidirectional_iterator_tag;
-        using value_type = T;
-        using difference_type = ptrdiff_t;
-        using pointer = const T*;
-        using reference = const T&;
-
-
-        ConstIterator() = default;
-        ConstIterator(const Node* node = nullptr) : curr_(node) {}
-        ConstIterator(const Iterator& it) noexcept : curr_(it.curr_) {}
-
-        const_reference operator*() const noexcept { return curr_->data_; }
-        const_pointer operator->() const noexcept { return &curr_->data_; }
-        ConstIterator& operator++() noexcept {
-            curr_ = curr_->next_;
-            return *this;
-        }
-        ConstIterator operator++(int) noexcept {
-            ConstIterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-        ConstIterator& operator--() noexcept {
-            curr_ = curr_->prev_;
-            return *this;
-        }
-        ConstIterator operator--(int) noexcept {
-            ConstIterator tmp = *this;
-            --(*this);
-            return tmp;
-        }
-        auto operator<=>(const ConstIterator& other) const noexcept = default;
-
-    private:
-        const Node* curr_;
-        friend class List;
-    };
-
-    using iterator = Iterator;
-    using const_iterator = ConstIterator;
+    using iterator = ListIterator<value_type>;
+    using const_iterator = ListIterator<const value_type>;
 
     List() : size_(0) {
         sentinel_.next_ = sentinel_.prev_ = &sentinel_;
@@ -121,11 +94,11 @@ public:
     List(const List& other)
         : size_(0) {
         sentinel_.next_ = sentinel_.prev_ = &sentinel_;
-        Node* curr = other.sentinel_.next_;
-        Node* copy_prev = &sentinel_;
+        auto curr = other.sentinel_.next_;
+        auto copy_prev = &sentinel_;
         try {
             while (curr != &other.sentinel_) {
-                Node* p = create_node(curr->data_);
+                auto p = create_node(curr->data_);
                 copy_prev->next_ = p;
                 p->prev_ = copy_prev;
                 p->next_ = &sentinel_;
@@ -134,8 +107,7 @@ public:
                 curr = curr->next_;
                 ++size_;
             }
-        }
-        catch (...) {
+        } catch (...) {
             clear();
             throw;
         }
@@ -174,9 +146,9 @@ public:
     ~List() { clear(); }
 
     void clear() noexcept {
-        Node* curr = sentinel_.next_;
+        auto curr = sentinel_.next_;
         while (curr != &sentinel_) {
-            Node* next = curr->next_;
+            auto next = curr->next_;
             destroy_node(curr);
             curr = next;
         }
@@ -185,12 +157,12 @@ public:
     }
 
 
-    bool            empty() const noexcept { return size_ == 0; }
-    size_type       size()  const noexcept { return size_; }
-    reference       front()       noexcept { return sentinel_.next_->data_; }
-    const_reference front() const noexcept { return sentinel_.next_->data_; }
-    reference       back()        noexcept { return sentinel_.prev_->data_; }
-    const_reference back()  const noexcept { return sentinel_.prev_->data_; }
+    bool            empty()   const noexcept { return size_ == 0; }
+    size_type       size()    const noexcept { return size_; }
+    reference       front()         noexcept { return sentinel_.next_->data_; }
+    const_reference front()   const noexcept { return sentinel_.next_->data_; }
+    reference       back()          noexcept { return sentinel_.prev_->data_; }
+    const_reference back()    const noexcept { return sentinel_.prev_->data_; }
 
     iterator        begin()         noexcept { return iterator(sentinel_.next_); }
     iterator        end()           noexcept { return iterator(&sentinel_); }
@@ -229,7 +201,7 @@ public:
 
     template<typename... Args>
     void emplace_back(Args&&... args) {
-        Node* p = create_node(std::forward<Args>(args)...);
+        auto p = create_node(std::forward<Args>(args)...);
         p->next_ = &sentinel_;
         p->prev_ = sentinel_.prev_;
         sentinel_.prev_->next_ = p;
@@ -239,7 +211,7 @@ public:
 
     template<typename... Args>
     void emplace_front(Args&&... args) {
-        Node* p = create_node(std::forward<Args>(args)...);
+        auto p = create_node(std::forward<Args>(args)...);
         p->next_ = sentinel_.next_;
         p->prev_ = &sentinel_;
         sentinel_.next_->prev_ = p;
@@ -249,9 +221,9 @@ public:
 
     template<typename... Args>
     iterator emplace(iterator pos, Args&&... args) {
-        Node* p = create_node(std::forward<Args>(args)...);
-        Node* next_node = pos.curr_;
-        Node* prev_node = next_node->prev_;
+        auto p = create_node(std::forward<Args>(args)...);
+        auto next_node = pos.curr_;
+        auto prev_node = next_node->prev_;
 
         p->next_ = next_node;
         p->prev_ = prev_node;
@@ -270,7 +242,7 @@ public:
     iterator insert(iterator pos, T&& data) { return emplace(pos, std::move(data)); }
 
     void pop_back() noexcept {
-        Node* p = sentinel_.prev_;
+        auto p = sentinel_.prev_;
         p->prev_->next_ = &sentinel_;
         sentinel_.prev_ = p->prev_;
 
@@ -278,7 +250,7 @@ public:
         --size_;
     }
     void pop_front() noexcept {
-        Node* p = sentinel_.next_;
+        auto p = sentinel_.next_;
         sentinel_.next_ = p->next_;
         p->next_->prev_ = &sentinel_;
 
@@ -291,7 +263,7 @@ public:
             return end();
         }
 
-        Node* p = pos.curr_;
+        auto p = pos.curr_;
         iterator next_it(p->next_);
 
         p->prev_->next_ = p->next_;
@@ -308,20 +280,19 @@ public:
             return;
         }
 
-        Node* new_head = merge_sort<Compare>(sentinel_.next_, comp);
+        auto new_head = merge_sort<Compare>(sentinel_.next_, comp);
 
         sentinel_.next_ = new_head;
         if (new_head) {
             new_head->prev_ = &sentinel_;
 
-            Node* curr = new_head;
+            auto curr = new_head;
             while (curr->next_ != &sentinel_) {
                 curr = curr->next_;
             }
             sentinel_.prev_ = curr;
             curr->next_ = &sentinel_;
-        }
-        else {
+        } else {
             sentinel_.next_ = sentinel_.prev_ = &sentinel_;
         }
     }
@@ -333,11 +304,11 @@ public:
         if (!std::is_sorted(begin(), end(), comp) || 
             !std::is_sorted(other.begin(), other.end(), comp)) return;
 
-        Node* this_curr = sentinel_.next_;
-        Node* other_curr = other.sentinel_.next_;
+        auto this_curr = sentinel_.next_;
+        auto other_curr = other.sentinel_.next_;
         while (this_curr != &sentinel_ && other_curr != &other.sentinel_) {
             if (comp(other_curr->data_, this_curr->data_)) {
-                Node* next_other = other_curr->next_;
+                auto next_other = other_curr->next_;
                 other_curr->prev_ = this_curr->prev_;
                 other_curr->next_ = this_curr;
                 this_curr->prev_->next_ = other_curr;
@@ -350,7 +321,7 @@ public:
             }
         }
         while (other_curr != &other.sentinel_) {
-            Node* next_other = other_curr->next_;
+            auto next_other = other_curr->next_;
             other_curr->prev_ = sentinel_.prev_;
             other_curr->next_ = &sentinel_;
             sentinel_.prev_->next_ = other_curr;
@@ -378,6 +349,7 @@ private:
     size_type size_;
     Node sentinel_;
 
+
     template<typename... Args>
     Node* create_node(Args&&... args) {
         return new Node(std::forward<Args>(args)...);
@@ -393,21 +365,21 @@ private:
             return head;
         }
 
-        Node* slow = head;
-        Node* fast = head->next_;
+        auto slow = head;
+        auto fast = head->next_;
         while (fast != &sentinel_ && fast->next_ != &sentinel_) {
             slow = slow->next_;
             fast = fast->next_->next_;
         }
 
-        Node* mid = slow->next_;
+        auto mid = slow->next_;
         slow->next_ = &sentinel_;
         if (mid != &sentinel_) {
             mid->prev_ = nullptr;
         }
 
-        Node* left = merge_sort(head, comp);
-        Node* right = merge_sort(mid, comp);
+        auto left = merge_sort(head, comp);
+        auto right = merge_sort(mid, comp);
 
         if (!left) return right;
         if (!right) return left;
@@ -421,7 +393,7 @@ private:
             right = right->next_;
         }
 
-        Node* tail = res;
+        auto tail = res;
         tail->next_ = nullptr;
         tail->prev_ = nullptr;
 
